@@ -1,0 +1,19 @@
+import { StoreHeader } from "@/components/store/StoreHeader";
+
+export default function StoreLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <StoreHeader />
+      {children}
+      <footer className="mt-16 border-t border-[var(--color-border)] py-8">
+        <div className="mx-auto max-w-6xl px-6 text-center text-sm text-[var(--color-muted)]">
+          © {new Date().getFullYear()} ShoeStore — Display catalog MVP
+        </div>
+      </footer>
+    </>
+  );
+}

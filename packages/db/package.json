@@ -1,0 +1,26 @@
+{
+  "name": "@shoestore/db",
+  "private": true,
+  "main": "./index.ts",
+  "scripts": {
+    "tsc": "tsc",
+    "clean": "rm -rf dist",
+    "prebuild": "pnpm clean && pnpm db:generate-schemas",
+    "build": "tsc",
+    "db:push": "prisma db push --skip-generate",
+    "db:generate-schemas": "prisma format && prisma generate",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.9.0",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.7.2"
+  }
+}

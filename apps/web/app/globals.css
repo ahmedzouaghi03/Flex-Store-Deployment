@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,900;1,9..40,400&display=swap");
+@import "tailwindcss";
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+:root {
+  --color-bg: #f4f7ee;
+  --color-surface: #ffffff;
+  --color-border: #d6e8b8;
+  --color-text: #1a2410;
+  --color-muted: #6a7860;
+  --color-accent: #4a7018;
+  --color-green-dark: #1a3406;
+  --color-green: #4a7018;
+  --color-green-mid: #5c8c1e;
+  --color-green-light: #7ab820;
+  --color-green-bright: #9ed43a;
+}

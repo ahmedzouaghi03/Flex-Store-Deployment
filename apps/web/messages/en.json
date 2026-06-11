@@ -1,0 +1,122 @@
+{
+  "Nav": {
+    "Home": "Home",
+    "Shop": "Shop",
+    "Cart": "Cart",
+    "SignIn": "Sign In"
+  },
+  "Cart": {
+    "Title": "Your Cart",
+    "Empty": "Your cart is empty",
+    "EmptyDesc": "Add some shoes to get started",
+    "Continue": "Continue Shopping",
+    "OrderSummary": "Order Summary",
+    "Subtotal": "Subtotal",
+    "Shipping": "Shipping",
+    "Free": "Free",
+    "Total": "Total",
+    "Checkout": "Checkout",
+    "Size": "Size",
+    "Color": "Color"
+  },
+  "Checkout": {
+    "Title": "Checkout",
+    "YourInfo": "Your Information",
+    "FullName": "Full Name *",
+    "Email": "Email",
+    "Phone": "Phone",
+    "Address": "Address",
+    "City": "City",
+    "PlaceOrder": "Place Order",
+    "OrderSummary": "Order Summary",
+    "Total": "Total",
+    "Size": "Size",
+    "ErrorNameRequired": "Please enter your full name.",
+    "ErrorGeneral": "Something went wrong. Please try again."
+  },
+  "Account": {
+    "Title": "My Account",
+    "Subtitle": "Sign in or create a free account to track your orders and manage your details.",
+    "SignIn": "Sign In",
+    "SignInDesc": "Already have an account",
+    "CreateAccount": "Create Account",
+    "CreateDesc": "New here? Join free",
+    "MyOrders": "My Orders",
+    "NoOrders": "No orders yet.",
+    "StartShopping": "Start shopping",
+    "SignOut": "Sign out",
+    "Items": "{count, plural, one {# item} other {# items}}"
+  },
+  "Login": {
+    "Title": "Sign In",
+    "Subtitle": "Welcome back. Sign in to view your orders.",
+    "Email": "Email",
+    "Password": "Password",
+    "Submit": "Sign In",
+    "NoAccount": "Don't have an account?",
+    "CreateOne": "Create one"
+  },
+  "Register": {
+    "Title": "Create Account",
+    "Subtitle": "Join to track your orders and manage your details.",
+    "FullName": "Full Name *",
+    "Email": "Email *",
+    "Phone": "Phone",
+    "Password": "Password *",
+    "PasswordMin": "(min. 6 characters)",
+    "Submit": "Create Account",
+    "HaveAccount": "Already have an account?",
+    "SignIn": "Sign in"
+  },
+  "Profile": {
+    "Title": "My Profile",
+    "MemberSince": "Member since",
+    "BackToOrders": "My Orders",
+    "PersonalDetails": "Personal Details",
+    "Edit": "Edit",
+    "Save": "Save",
+    "Cancel": "Cancel",
+    "FullName": "Full Name",
+    "Email": "Email",
+    "Phone": "Phone",
+    "EmailLocked": "Email cannot be changed.",
+    "Updated": "Profile updated successfully."
+  },
+  "UserMenu": {
+    "MyOrders": "My Orders",
+    "MyProfile": "My Profile",
+    "SignOut": "Sign Out"
+  },
+  "Modal": {
+    "OrderPlaced": "Order Placed!",
+    "Checking": "Checking your account…",
+    "ExistingEmail": "An account with this email already exists. Sign in to track your order.",
+    "ExistingPhone": "An account with this phone number already exists. Sign in to track your order.",
+    "CreateFree": "Create a free account to track your order and view your history.",
+    "FullName": "Full Name",
+    "Email": "Email",
+    "Phone": "Phone",
+    "ChoosePassword": "Choose a Password",
+    "PasswordMin": "(min. 6 characters)",
+    "Password": "Password",
+    "CreateAndTrack": "Create Account & Track Order",
+    "SignInAndTrack": "Sign In & Track Order",
+    "NotYou": "Not you? Register a new account instead",
+    "Skip": "Skip → View order confirmation"
+  },
+  "Product": {
+    "AddToCart": "Add to Cart",
+    "OutOfStock": "Out of Stock",
+    "LowStock": "Only {count} left in this size!",
+    "AddedToCart": "Added to cart!",
+    "SelectSize": "Select a size",
+    "Available": "{count} available",
+    "Color": "Color",
+    "Size": "Size",
+    "Quantity": "Quantity",
+    "SoldOut": "(sold out)"
+  },
+  "LanguageSelector": {
+    "Label": "Select Language"
+  }
+}

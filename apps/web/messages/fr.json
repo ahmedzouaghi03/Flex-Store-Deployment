@@ -1,0 +1,122 @@
+{
+  "Nav": {
+    "Home": "Accueil",
+    "Shop": "Boutique",
+    "Cart": "Panier",
+    "SignIn": "Connexion"
+  },
+  "Cart": {
+    "Title": "Votre Panier",
+    "Empty": "Votre panier est vide",
+    "EmptyDesc": "Ajoutez des chaussures pour commencer",
+    "Continue": "Continuer les achats",
+    "OrderSummary": "Récapitulatif",
+    "Subtotal": "Sous-total",
+    "Shipping": "Livraison",
+    "Free": "Gratuite",
+    "Total": "Total",
+    "Checkout": "Commander",
+    "Size": "Taille",
+    "Color": "Couleur"
+  },
+  "Checkout": {
+    "Title": "Commander",
+    "YourInfo": "Vos coordonnées",
+    "FullName": "Nom complet *",
+    "Email": "E-mail",
+    "Phone": "Téléphone",
+    "Address": "Adresse",
+    "City": "Ville",
+    "PlaceOrder": "Passer la commande",
+    "OrderSummary": "Récapitulatif",
+    "Total": "Total",
+    "Size": "Taille",
+    "ErrorNameRequired": "Veuillez saisir votre nom complet.",
+    "ErrorGeneral": "Une erreur est survenue. Veuillez réessayer."
+  },
+  "Account": {
+    "Title": "Mon Compte",
+    "Subtitle": "Connectez-vous ou créez un compte gratuit pour suivre vos commandes.",
+    "SignIn": "Connexion",
+    "SignInDesc": "Déjà un compte",
+    "CreateAccount": "Créer un compte",
+    "CreateDesc": "Nouveau ? Rejoignez-nous",
+    "MyOrders": "Mes Commandes",
+    "NoOrders": "Aucune commande pour l'instant.",
+    "StartShopping": "Commencer à magasiner",
+    "SignOut": "Se déconnecter",
+    "Items": "{count, plural, one {# article} other {# articles}}"
+  },
+  "Login": {
+    "Title": "Connexion",
+    "Subtitle": "Bienvenue. Connectez-vous pour voir vos commandes.",
+    "Email": "E-mail",
+    "Password": "Mot de passe",
+    "Submit": "Se connecter",
+    "NoAccount": "Pas encore de compte ?",
+    "CreateOne": "En créer un"
+  },
+  "Register": {
+    "Title": "Créer un compte",
+    "Subtitle": "Rejoignez-nous pour suivre vos commandes.",
+    "FullName": "Nom complet *",
+    "Email": "E-mail *",
+    "Phone": "Téléphone",
+    "Password": "Mot de passe *",
+    "PasswordMin": "(min. 6 caractères)",
+    "Submit": "Créer un compte",
+    "HaveAccount": "Déjà un compte ?",
+    "SignIn": "Se connecter"
+  },
+  "Profile": {
+    "Title": "Mon Profil",
+    "MemberSince": "Membre depuis",
+    "BackToOrders": "Mes Commandes",
+    "PersonalDetails": "Informations personnelles",
+    "Edit": "Modifier",
+    "Save": "Enregistrer",
+    "Cancel": "Annuler",
+    "FullName": "Nom complet",
+    "Email": "E-mail",
+    "Phone": "Téléphone",
+    "EmailLocked": "L'e-mail ne peut pas être modifié.",
+    "Updated": "Profil mis à jour avec succès."
+  },
+  "UserMenu": {
+    "MyOrders": "Mes Commandes",
+    "MyProfile": "Mon Profil",
+    "SignOut": "Se déconnecter"
+  },
+  "Modal": {
+    "OrderPlaced": "Commande passée !",
+    "Checking": "Vérification de votre compte…",
+    "ExistingEmail": "Un compte avec cet e-mail existe déjà. Connectez-vous pour suivre votre commande.",
+    "ExistingPhone": "Un compte avec ce numéro existe déjà. Connectez-vous pour suivre votre commande.",
+    "CreateFree": "Créez un compte gratuit pour suivre votre commande et voir votre historique.",
+    "FullName": "Nom complet",
+    "Email": "E-mail",
+    "Phone": "Téléphone",
+    "ChoosePassword": "Choisir un mot de passe",
+    "PasswordMin": "(min. 6 caractères)",
+    "Password": "Mot de passe",
+    "CreateAndTrack": "Créer un compte et suivre",
+    "SignInAndTrack": "Se connecter et suivre",
+    "NotYou": "Pas vous ? Créer un nouveau compte",
+    "Skip": "Ignorer → Voir la confirmation"
+  },
+  "Product": {
+    "AddToCart": "Ajouter au panier",
+    "OutOfStock": "Rupture de stock",
+    "LowStock": "Plus que {count} disponible(s) !",
+    "AddedToCart": "Ajouté au panier !",
+    "SelectSize": "Choisir une taille",
+    "Available": "{count} disponible(s)",
+    "Color": "Couleur",
+    "Size": "Taille",
+    "Quantity": "Quantité",
+    "SoldOut": "(épuisé)"
+  },
+  "LanguageSelector": {
+    "Label": "Choisir la langue"
+  }
+}

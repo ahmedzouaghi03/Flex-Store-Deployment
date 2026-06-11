@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add *)",
+      "Bash(pnpm --filter web check-types)",
+      "Bash(pnpm dev *)",
+      "Bash(timeout 15)"
+    ]
+  }
+}

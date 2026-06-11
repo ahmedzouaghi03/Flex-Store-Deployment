@@ -1,0 +1,123 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MEN
+  WOMEN
+  UNISEX
+  KIDS
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  logoUrl   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isDeleted Boolean   @default(false)
+  products  Product[]
+
+  @@index([slug])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  isDeleted Boolean   @default(false)
+  products  Product[]
+
+  @@index([slug])
+}
+
+model Product {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  description         String?  @db.Text
+  priceCents          Int
+  compareAtPriceCents Int?
+  images              String[]
+  gender              Gender   @default(UNISEX)
+  sizes               String[]
+  colors              String[]
+  isPublished         Boolean  @default(true)
+  isFeatured          Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  isDeleted           Boolean  @default(false)
+
+  brandId    String?
+  brand      Brand?      @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  categories Category[]
+  orderItems OrderItem[]
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([gender])
+  @@index([brandId])
+  @@index([createdAt])
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  publicId   String?     @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  status     OrderStatus @default(PENDING)
+  totalCents Int
+  name       String
+  email      String?
+  phone      String?
+  address    String?
+  city       String?
+  items      OrderItem[]
+
+  @@index([publicId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName String
+  imageUrl    String?
+  size        String?
+  colorName   String?
+  priceCents  Int
+  quantity    Int
+}

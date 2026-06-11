@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter @repo/db exec prisma generate)",
+      "Bash(pnpm --filter @shoestore/db exec prisma generate)"
+    ]
+  }
+}

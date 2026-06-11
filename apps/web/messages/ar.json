@@ -1,0 +1,122 @@
+{
+  "Nav": {
+    "Home": "الرئيسية",
+    "Shop": "المتجر",
+    "Cart": "السلة",
+    "SignIn": "تسجيل الدخول"
+  },
+  "Cart": {
+    "Title": "سلة التسوق",
+    "Empty": "سلتك فارغة",
+    "EmptyDesc": "أضف أحذية للبدء",
+    "Continue": "مواصلة التسوق",
+    "OrderSummary": "ملخص الطلب",
+    "Subtotal": "المجموع الفرعي",
+    "Shipping": "الشحن",
+    "Free": "مجاني",
+    "Total": "المجموع",
+    "Checkout": "إتمام الشراء",
+    "Size": "المقاس",
+    "Color": "اللون"
+  },
+  "Checkout": {
+    "Title": "إتمام الشراء",
+    "YourInfo": "بياناتك",
+    "FullName": "الاسم الكامل *",
+    "Email": "البريد الإلكتروني",
+    "Phone": "الهاتف",
+    "Address": "العنوان",
+    "City": "المدينة",
+    "PlaceOrder": "تأكيد الطلب",
+    "OrderSummary": "ملخص الطلب",
+    "Total": "المجموع",
+    "Size": "المقاس",
+    "ErrorNameRequired": "الرجاء إدخال اسمك الكامل.",
+    "ErrorGeneral": "حدث خطأ. الرجاء المحاولة مرة أخرى."
+  },
+  "Account": {
+    "Title": "حسابي",
+    "Subtitle": "سجّل الدخول أو أنشئ حسابًا مجانيًا لتتبع طلباتك.",
+    "SignIn": "تسجيل الدخول",
+    "SignInDesc": "لديك حساب بالفعل",
+    "CreateAccount": "إنشاء حساب",
+    "CreateDesc": "جديد هنا؟ انضم مجانًا",
+    "MyOrders": "طلباتي",
+    "NoOrders": "لا توجد طلبات بعد.",
+    "StartShopping": "ابدأ التسوق",
+    "SignOut": "تسجيل الخروج",
+    "Items": "{count, plural, one {# منتج} few {# منتجات} many {# منتجًا} other {# منتج}}"
+  },
+  "Login": {
+    "Title": "تسجيل الدخول",
+    "Subtitle": "مرحبًا بعودتك. سجّل الدخول لعرض طلباتك.",
+    "Email": "البريد الإلكتروني",
+    "Password": "كلمة المرور",
+    "Submit": "تسجيل الدخول",
+    "NoAccount": "ليس لديك حساب؟",
+    "CreateOne": "إنشاء حساب"
+  },
+  "Register": {
+    "Title": "إنشاء حساب",
+    "Subtitle": "انضم لتتبع طلباتك وإدارة بياناتك.",
+    "FullName": "الاسم الكامل *",
+    "Email": "البريد الإلكتروني *",
+    "Phone": "الهاتف",
+    "Password": "كلمة المرور *",
+    "PasswordMin": "(6 أحرف على الأقل)",
+    "Submit": "إنشاء حساب",
+    "HaveAccount": "لديك حساب بالفعل؟",
+    "SignIn": "تسجيل الدخول"
+  },
+  "Profile": {
+    "Title": "ملفي الشخصي",
+    "MemberSince": "عضو منذ",
+    "BackToOrders": "طلباتي",
+    "PersonalDetails": "البيانات الشخصية",
+    "Edit": "تعديل",
+    "Save": "حفظ",
+    "Cancel": "إلغاء",
+    "FullName": "الاسم الكامل",
+    "Email": "البريد الإلكتروني",
+    "Phone": "الهاتف",
+    "EmailLocked": "لا يمكن تغيير البريد الإلكتروني.",
+    "Updated": "تم تحديث الملف الشخصي بنجاح."
+  },
+  "UserMenu": {
+    "MyOrders": "طلباتي",
+    "MyProfile": "ملفي الشخصي",
+    "SignOut": "تسجيل الخروج"
+  },
+  "Modal": {
+    "OrderPlaced": "تم تقديم الطلب!",
+    "Checking": "جارٍ التحقق من حسابك…",
+    "ExistingEmail": "يوجد حساب بهذا البريد الإلكتروني. سجّل الدخول لتتبع طلبك.",
+    "ExistingPhone": "يوجد حساب بهذا الرقم. سجّل الدخول لتتبع طلبك.",
+    "CreateFree": "أنشئ حسابًا مجانيًا لتتبع طلبك وعرض سجل مشترياتك.",
+    "FullName": "الاسم الكامل",
+    "Email": "البريد الإلكتروني",
+    "Phone": "الهاتف",
+    "ChoosePassword": "اختر كلمة مرور",
+    "PasswordMin": "(6 أحرف على الأقل)",
+    "Password": "كلمة المرور",
+    "CreateAndTrack": "إنشاء حساب وتتبع الطلب",
+    "SignInAndTrack": "تسجيل الدخول وتتبع الطلب",
+    "NotYou": "ليس أنت؟ سجّل بحساب جديد",
+    "Skip": "تخطي ← عرض تأكيد الطلب"
+  },
+  "Product": {
+    "AddToCart": "أضف إلى السلة",
+    "OutOfStock": "غير متوفر",
+    "LowStock": "لم يتبق سوى {count}!",
+    "AddedToCart": "تمت الإضافة إلى السلة!",
+    "SelectSize": "اختر المقاس",
+    "Available": "{count} متاح",
+    "Color": "اللون",
+    "Size": "المقاس",
+    "Quantity": "الكمية",
+    "SoldOut": "(نفذ)"
+  },
+  "LanguageSelector": {
+    "Label": "اختر اللغة"
+  }
+}

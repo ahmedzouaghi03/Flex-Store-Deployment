@@ -1,0 +1,201 @@
+import Link from "next/link";
+import { ArrowRight, Play, Feather, Leaf, Zap, Star } from "lucide-react";
+import { existsSync } from "fs";
+import { join } from "path";
+
+import { getFeaturedProducts } from "@/actions/productActions";
+import { ProductGrid } from "@/components/store/ProductGrid";
+import { HeroImage } from "@/components/store/HeroImage";
+import { AutoPlayVideo } from "@/components/store/AutoPlayVideo";
+import { getStoreConfig } from "@/lib/store-config";
+
+const USP_ICONS = [Feather, Leaf, Zap, Star];
+
+export default async function HomePage() {
+  const [featured, config] = await Promise.all([
+    getFeaturedProducts(),
+    Promise.resolve(getStoreConfig()),
+  ]);
+  const products = featured.success ? (featured.data ?? []) : [];
+  const { hero, photoCard, usp, video, collection, footerCta } = config;
+
+  const hasVideo = existsSync(join(process.cwd(), "public", "store-video.mp4"));
+
+  return (
+    <main>
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      <section className="relative min-h-screen overflow-hidden flex items-center">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[var(--color-green-dark)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-green-dark)] via-[var(--color-green)] to-[var(--color-green-mid)]" />
+          <div className="absolute -top-40 -right-40 h-[700px] w-[700px] rounded-full bg-[var(--color-green-light)] opacity-20 blur-[120px]" />
+          <div className="absolute bottom-0 -left-40 h-[500px] w-[500px] rounded-full bg-[var(--color-green-bright)] opacity-10 blur-[100px]" />
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+              backgroundSize: "60px 60px",
+            }}
+          />
+        </div>
+
+        <div className="relative mx-auto w-full max-w-6xl px-6 py-24 md:py-32">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+
+            {/* LEFT: text */}
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.3em] text-white backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-green-bright)]" />
+                {hero.badge}
+              </span>
+              <h1 className="mt-6 text-6xl font-black leading-[1.05] tracking-tight text-white md:text-7xl">
+                {hero.line1}
+                <br />
+                <span className="text-[var(--color-green-bright)] drop-shadow-[0_0_40px_rgba(158,212,58,0.4)]">
+                  {hero.line2}
+                </span>
+                <br />
+                {hero.line3}
+              </h1>
+              <p className="mt-6 max-w-md text-base text-white/65 md:text-lg">
+                {hero.subtitle}
+              </p>
+              <div className="mt-10 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[var(--color-green)] shadow-[0_8px_30px_rgba(0,0,0,0.25)] transition hover:scale-105"
+                >
+                  {hero.cta1}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <a
+                  href="#video"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                >
+                  <Play className="h-4 w-4 fill-white" />
+                  {hero.cta2}
+                </a>
+              </div>
+            </div>
+
+            {/* RIGHT: commercial photo */}
+            <div className="flex items-center justify-center lg:justify-end">
+              <div className="relative w-full max-w-md">
+                <div className="absolute -inset-3 rounded-[2.5rem] border border-white/10" />
+                <div className="absolute inset-0 rounded-3xl bg-[var(--color-green-bright)] opacity-10 blur-2xl" />
+                <HeroImage />
+                <div className="absolute -bottom-4 -left-4 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-md">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">{photoCard.label}</p>
+                  <p className="text-base font-black text-white">{photoCard.year}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/30">Scroll</span>
+          <div className="h-10 w-px bg-gradient-to-b from-white/30 to-transparent" />
+        </div>
+      </section>
+
+      {/* ── USP BAR ──────────────────────────────────────────────────── */}
+      <section className="border-b border-[var(--color-border)] bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-10">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            {usp.map((item, i) => {
+              const Icon = USP_ICONS[i] ?? Star;
+              return (
+                <div key={i} className="flex flex-col items-center gap-3 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-bg)] ring-1 ring-[var(--color-border)]">
+                    <Icon className="h-5 w-5 text-[var(--color-accent)]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[var(--color-text)]">{item.label}</p>
+                    <p className="mt-0.5 text-xs text-[var(--color-muted)]">{item.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── VIDEO ────────────────────────────────────────────────────── */}
+      <section id="video" className="py-24 bg-[var(--color-bg)]">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
+              {video.label}
+            </p>
+            <h2 className="mt-2 text-3xl font-bold text-[var(--color-text)] md:text-4xl">
+              {video.title}
+            </h2>
+            <p className="mt-3 text-sm text-[var(--color-muted)]">{video.desc}</p>
+          </div>
+
+          <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
+            {hasVideo ? (
+              <AutoPlayVideo src="/store-video.mp4" />
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-green-dark)] via-[var(--color-green)] to-[var(--color-green-mid)]" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/25 backdrop-blur-sm">
+                    <Play className="ml-1 h-8 w-8 fill-white text-white" />
+                  </div>
+                  <p className="text-sm text-white/50">Upload your video from the admin panel</p>
+                </div>
+                <div className="absolute top-5 left-5 rounded-full border border-white/20 bg-black/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                  FLEX COMFORT SHOES
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRODUCTS ─────────────────────────────────────────────────── */}
+      <section className="border-t border-[var(--color-border)] py-20 bg-white">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mb-10 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
+                {collection.label}
+              </p>
+              <h2 className="mt-1 text-3xl font-bold text-[var(--color-text)]">{collection.title}</h2>
+              <p className="mt-1 text-sm text-[var(--color-muted)]">{collection.desc}</p>
+            </div>
+            <Link
+              href="/shop"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-accent)] transition hover:text-[var(--color-green-mid)]"
+            >
+              View all <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <ProductGrid products={products} />
+        </div>
+      </section>
+
+      {/* ── FOOTER CTA ───────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-t border-[var(--color-border)] py-24">
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-green-dark)] to-[var(--color-green)]" />
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: "radial-gradient(circle at 50% 50%, var(--color-green-light) 0%, transparent 70%)" }}
+        />
+        <div className="relative mx-auto max-w-xl px-6 text-center">
+          <h2 className="text-3xl font-black text-white md:text-5xl">{footerCta.title}</h2>
+          <p className="mt-4 text-white/60">{footerCta.desc}</p>
+          <Link
+            href="/shop"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-green-bright)] px-10 py-4 text-sm font-bold text-[var(--color-green-dark)] shadow-[0_8px_30px_rgba(158,212,58,0.3)] transition hover:scale-105"
+          >
+            {footerCta.btn} <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}

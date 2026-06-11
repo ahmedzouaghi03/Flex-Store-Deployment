@@ -1,0 +1,25 @@
+{
+  "name": "shoestore",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "db:generate": "pnpm --filter @shoestore/db db:generate-schemas",
+    "db:push": "pnpm --filter @shoestore/db db:push",
+    "db:seed": "pnpm --filter @shoestore/db db:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0",
+    "turbo": "^2.4.2",
+    "typescript": "5.7.3"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "lucide-react": "^0.487.0"
+  }
+}
