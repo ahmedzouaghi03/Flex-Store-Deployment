@@ -38,8 +38,22 @@ export async function createOrder(
     if (!customerInfo.name.trim()) return { success: false, error: "Name is required" };
     if (!cartItems.length) return { success: false, error: "Cart is empty" };
 
+    const productIds = [...new Set(cartItems.map((i) => i.productId))];
+    const products = await db.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, priceCents: true, isPublished: true, isDeleted: true },
+    });
+    const productById = new Map(products.map((p) => [p.id, p]));
+
+    for (const item of cartItems) {
+      const product = productById.get(item.productId);
+      if (!product || product.isDeleted || !product.isPublished) {
+        return { success: false, error: "One or more items are no longer available" };
+      }
+    }
+
     const totalCents = cartItems.reduce(
-      (sum, i) => sum + i.priceCents * i.quantity,
+      (sum, i) => sum + productById.get(i.productId)!.priceCents * i.quantity,
       0,
     );
 
@@ -60,7 +74,7 @@ export async function createOrder(
               imageUrl: item.imageUrl,
               size: item.size,
               colorName: item.colorName,
-              priceCents: item.priceCents,
+              priceCents: productById.get(item.productId)!.priceCents,
               quantity: item.quantity,
             })),
           },
