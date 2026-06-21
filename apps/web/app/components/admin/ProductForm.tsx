@@ -4,7 +4,7 @@ import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Loader2, Link as LinkIcon, Upload } from "lucide-react";
 
-import { createProduct, updateProduct } from "@/actions/adminActions";
+import { createProduct, updateProduct } from "@/actions/productActions";
 import type { AdminProductDetail, SizeStock } from "@/types";
 
 type ColorRow = { id: string; name: string; hex: string; imageUrls: string[]; urlInput: string };

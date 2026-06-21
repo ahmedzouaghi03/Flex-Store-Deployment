@@ -6,7 +6,7 @@ import {
   deleteProduct,
   toggleProductPublished,
   toggleProductFeatured,
-} from "@/actions/adminActions";
+} from "@/actions/productActions";
 import { formatPrice } from "@/lib/utils";
 
 export default async function AdminProductsPage() {

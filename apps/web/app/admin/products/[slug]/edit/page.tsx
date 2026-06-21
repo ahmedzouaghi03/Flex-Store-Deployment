@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-import { getProductForEdit } from "@/actions/adminActions";
+import { getProductForEdit } from "@/actions/productActions";
 import { ProductForm } from "@/components/admin/ProductForm";
 
 export default async function EditProductPage({
