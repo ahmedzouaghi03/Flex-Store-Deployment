@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import { isAdmin } from "@/lib/auth-guard";
 
 export async function POST(req: NextRequest) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -12,9 +17,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/avif",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only image files are allowed" },
+        { status: 400 },
+      );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
