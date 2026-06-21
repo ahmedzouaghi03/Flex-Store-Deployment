@@ -8,6 +8,10 @@
     "cta1": "Shop Collection",
     "cta2": "Watch Story"
   },
+  "photoCard": {
+    "label": "Collection",
+    "year": "2025"
+  },
   "usp": [
     {
       "label": "Ultra Light",
@@ -48,5 +52,6 @@
     "green-mid": "#5c8c1e",
     "green-light": "#7ab820",
     "green-bright": "#9ed43a"
-  }
+  },
+  "deliveryFeeCents": 700
 }

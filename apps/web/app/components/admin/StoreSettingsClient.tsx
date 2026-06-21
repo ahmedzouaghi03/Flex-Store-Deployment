@@ -7,6 +7,7 @@ import { resetToDefault } from "@/actions/storeConfigActions";
 import { HeroTextEditor } from "./HeroTextEditor";
 import { VideoTextEditor, FooterCtaEditor } from "./VideoTextEditor";
 import { ColorEditor } from "./ColorEditor";
+import { DeliveryFeeEditor, DeliveryFeeMiniPreview } from "./DeliveryFeeEditor";
 import { HeroPhotoUpload } from "./HeroPhotoUpload";
 import { VideoUpload } from "./VideoUpload";
 import { LogoUpload } from "./LogoUpload";
@@ -312,6 +313,7 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
   const [videoPreview, setVideoPreview]       = useState(config.video);
   const [footerPreview, setFooterPreview]     = useState(config.footerCta);
   const [colorPreview, setColorPreview]       = useState<StoreColors>(config.colors);
+  const [deliveryFeePreview, setDeliveryFeePreview] = useState(config.deliveryFeeCents);
   const [logoVersion, setLogoVersion]         = useState(0);
   const [heroVersion, setHeroVersion]         = useState(0);
 
@@ -388,6 +390,14 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
         desc="Pick colors for the entire site. The preview updates instantly."
         editor={<ColorEditor initial={config.colors} onPreviewChange={setColorPreview} />}
         preview={<ColorMiniPreview colors={colorPreview} />}
+      />
+
+      {/* Delivery fee */}
+      <EditRow
+        title="🚚 Delivery Fee"
+        desc="Flat fee added to every order's total at checkout."
+        editor={<DeliveryFeeEditor initialCents={config.deliveryFeeCents} onPreviewChange={setDeliveryFeePreview} />}
+        preview={<DeliveryFeeMiniPreview cents={deliveryFeePreview} />}
       />
 
       {/* ── Full-page scrollable preview ── */}

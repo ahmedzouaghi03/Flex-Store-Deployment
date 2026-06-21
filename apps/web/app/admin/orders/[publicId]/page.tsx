@@ -111,11 +111,25 @@ export default async function OrderDetailPage({ params }: Props) {
                 </li>
               ))}
             </ul>
-            <div className="flex items-center justify-between border-t border-[var(--color-border)] bg-[var(--color-bg)] px-5 py-4">
-              <span className="text-sm font-semibold text-[var(--color-text)]">Total</span>
-              <span className="text-lg font-bold text-[var(--color-text)]">
-                {formatPrice(order.totalCents)}
-              </span>
+            <div className="space-y-2 border-t border-[var(--color-border)] bg-[var(--color-bg)] px-5 py-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--color-muted)]">Subtotal</span>
+                <span className="font-semibold text-[var(--color-text)]">
+                  {formatPrice(order.totalCents - order.deliveryFeeCents)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--color-muted)]">Delivery fee</span>
+                <span className="font-semibold text-[var(--color-text)]">
+                  {order.deliveryFeeCents === 0 ? "Free" : formatPrice(order.deliveryFeeCents)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2">
+                <span className="text-sm font-semibold text-[var(--color-text)]">Total</span>
+                <span className="text-lg font-bold text-[var(--color-text)]">
+                  {formatPrice(order.totalCents)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

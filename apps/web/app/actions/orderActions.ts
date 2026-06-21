@@ -3,6 +3,7 @@
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { db } from "@shoestore/db";
+import { getStoreConfig } from "@/lib/store-config";
 import type { CartItem, ActionResult } from "@/types";
 
 function generatePublicId(): string {
@@ -52,10 +53,12 @@ export async function createOrder(
       }
     }
 
-    const totalCents = cartItems.reduce(
+    const subtotalCents = cartItems.reduce(
       (sum, i) => sum + productById.get(i.productId)!.priceCents * i.quantity,
       0,
     );
+    const deliveryFeeCents = getStoreConfig().deliveryFeeCents;
+    const totalCents = subtotalCents + deliveryFeeCents;
 
     const order = await db.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
@@ -67,6 +70,7 @@ export async function createOrder(
           address: customerInfo.address?.trim() || null,
           city: customerInfo.city?.trim() || null,
           totalCents,
+          deliveryFeeCents,
           items: {
             create: cartItems.map((item) => ({
               productId: item.productId,
@@ -199,6 +203,7 @@ export type OrderDetail = {
   updatedAt: Date;
   status: string;
   totalCents: number;
+  deliveryFeeCents: number;
   name: string;
   email: string | null;
   phone: string | null;

@@ -103,3 +103,26 @@ export async function saveColors(
     return { success: false, error: "Failed to save" };
   }
 }
+
+export async function saveDeliveryFee(
+  deliveryFeeCents: number,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!Number.isInteger(deliveryFeeCents) || deliveryFeeCents < 0) {
+      return { success: false, error: "Delivery fee must be a non-negative amount" };
+    }
+    const config = getStoreConfig();
+    config.deliveryFeeCents = deliveryFeeCents;
+    saveStoreConfig(config);
+    revalidateAll();
+    revalidatePath("/cart");
+    revalidatePath("/checkout");
+    return { success: true };
+  } catch {
+    return { success: false, error: "Failed to save" };
+  }
+}
+
+export async function getDeliveryFeeCents(): Promise<number> {
+  return getStoreConfig().deliveryFeeCents;
+}

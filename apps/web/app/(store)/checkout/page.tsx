@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useCart } from "@/cart-context";
 import { formatPrice } from "@/lib/utils";
 import { createOrder } from "@/actions/orderActions";
+import { getDeliveryFeeCents } from "@/actions/storeConfigActions";
 import { CheckoutSuccessModal } from "@/components/store/CheckoutSuccessModal";
 
 export default function CheckoutPage() {
@@ -14,6 +15,11 @@ export default function CheckoutPage() {
   const router = useRouter();
   const t = useTranslations("Checkout");
   const [, startTransition] = useTransition();
+  const [deliveryFeeCents, setDeliveryFeeCents] = useState(0);
+
+  useEffect(() => {
+    getDeliveryFeeCents().then(setDeliveryFeeCents);
+  }, []);
 
   const [name, setName]       = useState("");
   const [email, setEmail]     = useState("");
@@ -171,9 +177,22 @@ export default function CheckoutPage() {
               ))}
             </div>
 
+            <div className="space-y-2 border-t border-[var(--color-border)] pt-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--color-muted)]">{t("Subtotal")}</span>
+                <span className="font-semibold text-[var(--color-text)]">{formatPrice(totalCents)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-muted)]">{t("Shipping")}</span>
+                <span className="font-semibold text-[var(--color-text)]">
+                  {deliveryFeeCents === 0 ? t("Free") : formatPrice(deliveryFeeCents)}
+                </span>
+              </div>
+            </div>
+
             <div className="border-t border-[var(--color-border)] pt-3 flex justify-between">
               <span className="font-bold text-[var(--color-text)]">{t("Total")}</span>
-              <span className="font-bold text-[var(--color-text)]">{formatPrice(totalCents)}</span>
+              <span className="font-bold text-[var(--color-text)]">{formatPrice(totalCents + deliveryFeeCents)}</span>
             </div>
           </div>
         </div>

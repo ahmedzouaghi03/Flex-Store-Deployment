@@ -1,14 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { getDeliveryFeeCents } from "@/actions/storeConfigActions";
 
 export default function CartPage() {
   const { items, totalCents, updateQty, removeItem } = useCart();
   const t = useTranslations("Cart");
+  const [deliveryFeeCents, setDeliveryFeeCents] = useState(0);
+
+  useEffect(() => {
+    getDeliveryFeeCents().then(setDeliveryFeeCents);
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -123,13 +130,15 @@ export default function CartPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--color-muted)]">{t("Shipping")}</span>
-                <span className="font-semibold text-green-600">{t("Free")}</span>
+                <span className={`font-semibold ${deliveryFeeCents === 0 ? "text-green-600" : "text-[var(--color-text)]"}`}>
+                  {deliveryFeeCents === 0 ? t("Free") : formatPrice(deliveryFeeCents)}
+                </span>
               </div>
             </div>
 
             <div className="border-t border-[var(--color-border)] pt-3 flex justify-between">
               <span className="font-bold text-[var(--color-text)]">{t("Total")}</span>
-              <span className="font-bold text-[var(--color-text)]">{formatPrice(totalCents)}</span>
+              <span className="font-bold text-[var(--color-text)]">{formatPrice(totalCents + deliveryFeeCents)}</span>
             </div>
 
             <Link
