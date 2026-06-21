@@ -35,7 +35,7 @@ const productInputSchema = z.object({
   isFeatured: z.boolean(),
 }) satisfies z.ZodType<ProductInput>;
 
-const idSchema = z.ulid();
+const idSchema = z.string().min(1);
 
 function toSlug(text: string): string {
   return text
