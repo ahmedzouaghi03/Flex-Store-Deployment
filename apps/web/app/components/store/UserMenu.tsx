@@ -2,9 +2,15 @@
 
 import { useRef, useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Package, UserCircle, LogOut, ChevronDown, Loader2 } from "lucide-react";
+import {
+  Package,
+  UserCircle,
+  LogOut,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { logoutUser } from "@/actions/customerAuthActions";
+import { logoutUser } from "@/actions/authActions";
 
 type Props = { name: string; email: string };
 
@@ -18,13 +24,18 @@ function getInitials(name: string) {
 }
 
 const AVATAR_COLORS = [
-  "bg-violet-500", "bg-blue-500", "bg-emerald-500",
-  "bg-amber-500",  "bg-rose-500",  "bg-indigo-500",
+  "bg-violet-500",
+  "bg-blue-500",
+  "bg-emerald-500",
+  "bg-amber-500",
+  "bg-rose-500",
+  "bg-indigo-500",
 ];
 
 function avatarColor(name: string) {
   let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < name.length; i++)
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
@@ -36,7 +47,8 @@ export function UserMenu({ name, email }: Props) {
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -58,7 +70,9 @@ export function UserMenu({ name, email }: Props) {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-[var(--color-bg)]"
       >
-        <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${color}`}>
+        <span
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${color}`}
+        >
           {initials}
         </span>
         <span className="hidden text-sm font-semibold text-[var(--color-text)] sm:block">
@@ -74,8 +88,12 @@ export function UserMenu({ name, email }: Props) {
         <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-[var(--color-border)] bg-white shadow-lg overflow-hidden z-50">
           {/* User info */}
           <div className="px-4 py-3 border-b border-[var(--color-border)]">
-            <p className="text-sm font-bold text-[var(--color-text)] truncate">{name}</p>
-            <p className="text-xs text-[var(--color-muted)] truncate">{email}</p>
+            <p className="text-sm font-bold text-[var(--color-text)] truncate">
+              {name}
+            </p>
+            <p className="text-xs text-[var(--color-muted)] truncate">
+              {email}
+            </p>
           </div>
 
           {/* Menu items */}
@@ -104,7 +122,11 @@ export function UserMenu({ name, email }: Props) {
               disabled={isPending}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition disabled:opacity-60"
             >
-              {isPending ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+              {isPending ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <LogOut size={15} />
+              )}
               {t("SignOut")}
             </button>
           </div>
