@@ -94,6 +94,43 @@ export async function updateProfile(data: {
   }
 }
 
+export type PastAddress = { address: string; city: string };
+
+export async function getCheckoutPrefill(): Promise<{
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  pastAddresses: PastAddress[];
+} | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  const user = await db.user.findUnique({
+    where: { id: session.userId },
+    select: { name: true, email: true, phone: true },
+  });
+  if (!user) return null;
+
+  const addresses = await db.address.findMany({
+    where: { userId: session.userId },
+    orderBy: [{ isPrimary: "desc" }, { createdAt: "desc" }],
+    select: { address: true, city: true },
+  });
+
+  const pastAddresses: PastAddress[] = addresses.map((a) => ({ address: a.address, city: a.city }));
+
+  return {
+    name: user.name,
+    email: user.email,
+    phone: user.phone ?? "",
+    address: pastAddresses[0]?.address ?? "",
+    city: pastAddresses[0]?.city ?? "",
+    pastAddresses,
+  };
+}
+
 export async function checkUserExists(email: string, phone?: string): Promise<{ exists: boolean; field: "email" | "phone" | null }> {
   const byEmail = email ? await db.user.findUnique({ where: { email: email.trim().toLowerCase() } }) : null;
   if (byEmail) return { exists: true, field: "email" };

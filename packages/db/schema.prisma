@@ -8,6 +8,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 enum Gender {
   MEN
   WOMEN
@@ -78,35 +83,66 @@ model Product {
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  publicId   String?     @unique
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  status     OrderStatus @default(PENDING)
-  totalCents Int
-  deliveryFeeCents Int @default(0)
-  name       String
-  email      String?
-  phone      String?
-  address    String?
-  city       String?
-  items      OrderItem[]
+  id       String  @id @default(cuid())
+  publicId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status           OrderStatus @default(PENDING)
+  totalCents       Int
+  deliveryFeeCents Int         @default(0)
+  name             String
+  email            String?
+  phone            String?
+  address          String?
+  city             String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  items OrderItem[]
 
   @@index([publicId])
   @@index([createdAt])
   @@index([status])
+  @@index([userId])
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  phone     String?
-  password  String
+  id String @id @default(cuid())
+
+  name  String
+  email String  @unique
+  phone String?
+
+  password String
+  role     UserRole @default(USER)
+
+  addresses Address[]
+  orders    Order[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([email])
+}
+
+model Address {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  address String
+  city    String
+  phone   String?
+
+  isPrimary Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model OrderItem {

@@ -4,6 +4,7 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { db } from "@shoestore/db";
 import { getStoreConfig } from "@/lib/store-config";
+import { getSession } from "@/lib/session";
 import type { CartItem, ActionResult } from "@/types";
 
 function generatePublicId(): string {
@@ -60,6 +61,10 @@ export async function createOrder(
     const deliveryFeeCents = getStoreConfig().deliveryFeeCents;
     const totalCents = subtotalCents + deliveryFeeCents;
 
+    const session = await getSession();
+    const trimmedAddress = customerInfo.address?.trim() || null;
+    const trimmedCity = customerInfo.city?.trim() || null;
+
     const order = await db.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
@@ -67,10 +72,11 @@ export async function createOrder(
           name: customerInfo.name.trim(),
           email: customerInfo.email?.trim() || null,
           phone: customerInfo.phone?.trim() || null,
-          address: customerInfo.address?.trim() || null,
-          city: customerInfo.city?.trim() || null,
+          address: trimmedAddress,
+          city: trimmedCity,
           totalCents,
           deliveryFeeCents,
+          userId: session?.userId,
           items: {
             create: cartItems.map((item) => ({
               productId: item.productId,
@@ -110,11 +116,33 @@ export async function createOrder(
         });
       }
 
+      // Save this address to the user's address book if it's new
+      if (session?.userId && trimmedAddress && trimmedCity) {
+        const existing = await tx.address.findFirst({
+          where: {
+            userId: session.userId,
+            address: { equals: trimmedAddress, mode: "insensitive" },
+            city: { equals: trimmedCity, mode: "insensitive" },
+          },
+        });
+        if (!existing) {
+          await tx.address.create({
+            data: {
+              userId: session.userId,
+              address: trimmedAddress,
+              city: trimmedCity,
+              phone: customerInfo.phone?.trim() || null,
+            },
+          });
+        }
+      }
+
       return newOrder;
     });
 
     revalidatePath("/admin/orders");
     revalidatePath("/shop");
+    revalidatePath("/checkout");
     return { success: true, data: { orderId: order.id, publicId: order.publicId } };
   } catch (error) {
     console.error("[ORDER] create error:", error);
