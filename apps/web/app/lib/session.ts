@@ -1,9 +1,19 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import { UserRole } from "@shoestore/db";
 
-const SECRET = process.env.SESSION_SECRET ?? "dev-secret-please-change-in-production";
+const SECRET =
+  process.env.SESSION_SECRET ??
+  (() => {
+    throw new Error("SESSION_SECRET environment variable is not set");
+  })();
 
-export type SessionPayload = { userId: string; email: string; name: string };
+export type SessionPayload = {
+  userId: string;
+  email: string;
+  name: string;
+  role: UserRole;
+};
 
 function sign(payload: SessionPayload): string {
   const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
@@ -17,11 +27,15 @@ function verify(token: string): SessionPayload | null {
     if (dot === -1) return null;
     const data = token.slice(0, dot);
     const sig = token.slice(dot + 1);
-    const expected = createHmac("sha256", SECRET).update(data).digest("base64url");
+    const expected = createHmac("sha256", SECRET)
+      .update(data)
+      .digest("base64url");
     const a = Buffer.from(sig, "base64url");
     const b = Buffer.from(expected, "base64url");
     if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-    return JSON.parse(Buffer.from(data, "base64url").toString("utf8")) as SessionPayload;
+    return JSON.parse(
+      Buffer.from(data, "base64url").toString("utf8"),
+    ) as SessionPayload;
   } catch {
     return null;
   }
