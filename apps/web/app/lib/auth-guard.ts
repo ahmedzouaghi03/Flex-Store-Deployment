@@ -1,39 +1,37 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "crypto";
+import { getSession, type SessionPayload } from "@/lib/session";
 import { cookies } from "next/headers";
+import { UserRole } from "@shoestore/db";
 
 const COOKIE = "admin_session";
+const ADMIN_ROLES: UserRole[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
 
-function verifyAdminToken(token: string): boolean {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) return false;
-
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [payload, sig] = parts;
-
-  try {
-    const expected = createHmac("sha256", secret).update(payload).digest("hex");
-    const a = Buffer.from(sig, "hex");
-    const b = Buffer.from(expected, "hex");
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
-
-    const { exp } = JSON.parse(
-      Buffer.from(payload, "base64").toString("utf8"),
-    ) as { exp: number };
-    return Date.now() < exp;
-  } catch {
-    return false;
-  }
+export async function getAdminSession(): Promise<SessionPayload | null> {
+  const session = await getSession();
+  if (!session || !ADMIN_ROLES.includes(session.role)) return null;
+  return session;
 }
 
 // Boolean check - use in server actions that return ActionResult.
 export async function isAdmin(): Promise<boolean> {
-  const token = (await cookies()).get(COOKIE)?.value ?? "";
-  return verifyAdminToken(token);
+  return (await getAdminSession()) !== null;
+}
+
+export async function isSuperAdmin(): Promise<boolean> {
+  const session = await getSession();
+  return session?.role === UserRole.SUPER_ADMIN;
 }
 
 // Throwing variant - use in route handlers / where you want a hard stop.
-export async function requireAdmin(): Promise<void> {
-  if (!(await isAdmin())) throw new Error("Unauthorized");
+export async function requireAdmin(): Promise<SessionPayload> {
+  const session = await getAdminSession();
+  if (!session) throw new Error("Unauthorized");
+  return session;
+}
+
+export async function requireSuperAdmin(): Promise<SessionPayload> {
+  const session = await getSession();
+  if (!session || session.role !== UserRole.SUPER_ADMIN) throw new Error("Unauthorized");
+  return session;
 }
