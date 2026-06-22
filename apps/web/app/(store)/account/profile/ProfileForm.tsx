@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Loader2, Pencil, Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { updateProfile } from "@/actions/customerAuthActions";
+import { updateProfile } from "@/actions/authActions";
 
 type Props = { initialName: string; email: string; initialPhone: string };
 
@@ -42,9 +42,14 @@ export function ProfileForm({ initialName, email, initialPhone }: Props) {
   }
 
   return (
-    <form onSubmit={handleSave} className="rounded-2xl border border-[var(--color-border)] bg-white p-6 space-y-4">
+    <form
+      onSubmit={handleSave}
+      className="rounded-2xl border border-[var(--color-border)] bg-white p-6 space-y-4"
+    >
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-[var(--color-text)]">{t("PersonalDetails")}</h2>
+        <h2 className="font-semibold text-[var(--color-text)]">
+          {t("PersonalDetails")}
+        </h2>
         {!editing ? (
           <button
             type="button"
@@ -60,7 +65,11 @@ export function ProfileForm({ initialName, email, initialPhone }: Props) {
               disabled={isPending}
               className="flex items-center gap-1.5 rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[var(--color-green-mid)] disabled:opacity-60"
             >
-              {isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+              {isPending ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Check size={12} />
+              )}
               {t("Save")}
             </button>
             <button
@@ -75,7 +84,9 @@ export function ProfileForm({ initialName, email, initialPhone }: Props) {
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
       {success && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -84,7 +95,9 @@ export function ProfileForm({ initialName, email, initialPhone }: Props) {
       )}
 
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-[var(--color-text)]">{t("FullName")}</label>
+        <label className="text-sm font-bold text-[var(--color-text)]">
+          {t("FullName")}
+        </label>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -95,13 +108,17 @@ export function ProfileForm({ initialName, email, initialPhone }: Props) {
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-[var(--color-text)]">{t("Email")}</label>
+        <label className="text-sm font-bold text-[var(--color-text)]">
+          {t("Email")}
+        </label>
         <input value={email} disabled className={inp} />
         <p className="text-xs text-[var(--color-muted)]">{t("EmailLocked")}</p>
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-[var(--color-text)]">{t("Phone")}</label>
+        <label className="text-sm font-bold text-[var(--color-text)]">
+          {t("Phone")}
+        </label>
         <input
           type="tel"
           value={phone}
