@@ -2,10 +2,10 @@
 
 import { useActionState } from "react";
 import { Loader2, Lock } from "lucide-react";
-import { login } from "@/actions/authActions";
+import { adminLogin } from "@/actions/authActions";
 
 export default function LoginPage() {
-  const [state, action, pending] = useActionState(login, null);
+  const [state, action, pending] = useActionState(adminLogin, null);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4">
@@ -46,14 +46,14 @@ export default function LoginPage() {
           <form action={action} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-[var(--color-text)]">
-                Username
+                Email
               </label>
               <input
-                name="username"
-                type="text"
+                name="email"
+                type="email"
                 required
-                autoComplete="username"
-                placeholder="admin"
+                autoComplete="email"
+                placeholder="you@example.com"
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none transition focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
               />
             </div>
