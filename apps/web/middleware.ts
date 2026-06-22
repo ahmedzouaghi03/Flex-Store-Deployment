@@ -43,12 +43,7 @@ async function readSessionRole(token: string): Promise<string | null> {
       new TextDecoder().decode(b64urlToBytes(data)),
     ) as {
       role?: string;
-      exp?: number;
     };
-
-    if (typeof payload.exp !== "number" || Date.now() >= payload.exp) {
-      return null;
-    }
 
     return payload.role ?? null;
   } catch {
