@@ -3,9 +3,9 @@ import { cookies } from "next/headers";
 import { UserRole } from "@shoestore/db";
 
 const SECRET =
-  process.env.SESSION_SECRET ??
+  process.env.AUTH_SECRET ??
   (() => {
-    throw new Error("SESSION_SECRET environment variable is not set");
+    throw new Error("AUTH_SECRET environment variable is not set");
   })();
 
 export type SessionPayload = {
