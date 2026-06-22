@@ -2,11 +2,24 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, ShoppingBag, Plus, Store, ClipboardList } from "lucide-react";
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Plus,
+  Store,
+  ClipboardList,
+  Users,
+} from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
 import { LogoImage } from "@/components/store/LogoImage";
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({
+  children,
+  role,
+}: {
+  children: React.ReactNode;
+  role?: string | null;
+}) {
   const pathname = usePathname();
 
   // Login page — render nothing but the page itself
@@ -45,11 +58,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         {/* sidebar */}
         <aside className="min-h-[calc(100vh-53px)] w-52 shrink-0 border-r border-[var(--color-border)] bg-white">
           <nav className="space-y-1 p-4">
-            <NavLink href="/admin/products" active={pathname.startsWith("/admin/products")}>
+            <NavLink
+              href="/admin/products"
+              active={pathname.startsWith("/admin/products")}
+            >
               <ShoppingBag className="h-4 w-4" />
               Products
             </NavLink>
-            <NavLink href="/admin/products/new" active={pathname === "/admin/products/new"}>
+            <NavLink
+              href="/admin/products/new"
+              active={pathname === "/admin/products/new"}
+            >
               <Plus className="h-4 w-4" />
               Add Shoe
             </NavLink>
@@ -57,10 +76,22 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Store className="h-4 w-4" />
               Store
             </NavLink>
-            <NavLink href="/admin/orders" active={pathname.startsWith("/admin/orders")}>
+            <NavLink
+              href="/admin/orders"
+              active={pathname.startsWith("/admin/orders")}
+            >
               <ClipboardList className="h-4 w-4" />
               Orders
             </NavLink>
+            {role === "SUPER_ADMIN" && (
+              <NavLink
+                href="/admin/team"
+                active={pathname.startsWith("/admin/team")}
+              >
+                <Users className="h-4 w-4" />
+                Team
+              </NavLink>
+            )}
             <NavLink href="/admin" active={pathname === "/admin"}>
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
