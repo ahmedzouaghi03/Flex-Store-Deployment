@@ -1,10 +1,7 @@
 import "server-only";
-import { createHmac, timingSafeEqual } from "crypto";
 import { getSession, type SessionPayload } from "@/lib/session";
-import { cookies } from "next/headers";
 import { UserRole } from "@shoestore/db";
 
-const COOKIE = "admin_session";
 const ADMIN_ROLES: UserRole[] = [UserRole.ADMIN, UserRole.SUPER_ADMIN];
 
 export async function getAdminSession(): Promise<SessionPayload | null> {
