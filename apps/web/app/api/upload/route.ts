@@ -3,6 +3,15 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import { isAdmin } from "@/lib/auth-guard";
+import { validateUpload } from "@/lib/upload-guard";
+
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+];
 
 export async function POST(req: NextRequest) {
   if (!(await isAdmin())) {
@@ -17,23 +26,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "image/gif",
-      "image/avif",
-    ];
-    if (!allowedTypes.includes(file.type)) {
+    const validation = validateUpload(file, ALLOWED_IMAGE_TYPES, "image");
+    if (!validation.ok) {
       return NextResponse.json(
-        { error: "Only image files are allowed" },
-        { status: 400 },
+        { error: validation.message },
+        { status: validation.status },
       );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const filename = `${randomUUID()}.${ext}`;
+    // ext comes from the validated MIME type, never from file.name
+    const filename = `${randomUUID()}.${validation.ext}`;
 
     const uploadDir = join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
