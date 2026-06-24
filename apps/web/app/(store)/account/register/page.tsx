@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { UserPlus, Loader2, Eye, EyeOff } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { registerUser } from "@/actions/customerAuthActions";
+import { registerUser } from "@/actions/authActions";
 import { Suspense } from "react";
 
 const inp =
@@ -38,25 +38,58 @@ function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-[var(--color-border)] bg-white p-6 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-[var(--color-border)] bg-white p-6 space-y-4"
+    >
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
       <div className="space-y-1.5">
-        <label className="text-sm font-bold text-[var(--color-text)]">{t("FullName")}</label>
-        <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" className={inp} />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-sm font-bold text-[var(--color-text)]">{t("Email")}</label>
-        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inp} />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-sm font-bold text-[var(--color-text)]">{t("Phone")}</label>
-        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+216 XX XXX XXX" className={inp} />
+        <label className="text-sm font-bold text-[var(--color-text)]">
+          {t("FullName")}
+        </label>
+        <input
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your full name"
+          className={inp}
+        />
       </div>
       <div className="space-y-1.5">
         <label className="text-sm font-bold text-[var(--color-text)]">
-          {t("Password")} <span className="text-[var(--color-muted)] font-normal text-xs">{t("PasswordMin")}</span>
+          {t("Email")}
+        </label>
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={inp}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-bold text-[var(--color-text)]">
+          {t("Phone")}
+        </label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="+216 XX XXX XXX"
+          className={inp}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-bold text-[var(--color-text)]">
+          {t("Password")}{" "}
+          <span className="text-[var(--color-muted)] font-normal text-xs">
+            {t("PasswordMin")}
+          </span>
         </label>
         <div className="relative">
           <input
@@ -68,7 +101,11 @@ function RegisterForm() {
             placeholder="••••••••"
             className={inp + " pr-11"}
           />
-          <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] hover:text-[var(--color-text)] transition">
+          <button
+            type="button"
+            onClick={() => setShowPw((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
+          >
             {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
@@ -78,7 +115,11 @@ function RegisterForm() {
         disabled={isPending}
         className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)] disabled:opacity-60"
       >
-        {isPending ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
+        {isPending ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : (
+          <UserPlus size={16} />
+        )}
         {t("Submit")}
       </button>
     </form>
@@ -95,7 +136,9 @@ export default function RegisterPage() {
             <UserPlus size={28} className="text-[var(--color-accent)]" />
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">{t("Title")}</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text)]">
+          {t("Title")}
+        </h1>
         <p className="text-sm text-[var(--color-muted)]">{t("Subtitle")}</p>
       </div>
       <Suspense>
@@ -103,7 +146,12 @@ export default function RegisterPage() {
       </Suspense>
       <p className="text-center text-sm text-[var(--color-muted)]">
         {t("HaveAccount")}{" "}
-        <Link href="/account/login" className="font-semibold text-[var(--color-accent)] hover:underline">{t("SignIn")}</Link>
+        <Link
+          href="/account/login"
+          className="font-semibold text-[var(--color-accent)] hover:underline"
+        >
+          {t("SignIn")}
+        </Link>
       </p>
     </main>
   );

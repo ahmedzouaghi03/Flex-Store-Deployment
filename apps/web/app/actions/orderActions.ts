@@ -2,7 +2,9 @@
 
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
-import { db } from "@shoestore/db";
+import { db, OrderStatus } from "@shoestore/db";
+import z from "zod";
+import { isAdmin } from "@/lib/auth-guard";
 import type { CartItem, ActionResult } from "@/types";
 
 function generatePublicId(): string {
@@ -35,7 +37,8 @@ export async function createOrder(
   cartItems: CartItem[],
 ): Promise<ActionResult<{ orderId: string; publicId: string | null }>> {
   try {
-    if (!customerInfo.name.trim()) return { success: false, error: "Name is required" };
+    if (!customerInfo.name.trim())
+      return { success: false, error: "Name is required" };
     if (!cartItems.length) return { success: false, error: "Cart is empty" };
 
     const totalCents = cartItems.reduce(
@@ -79,7 +82,10 @@ export async function createOrder(
           try {
             const s = JSON.parse(raw) as { size: string; stock: number };
             if (s.size === item.size) {
-              return JSON.stringify({ ...s, stock: Math.max(0, s.stock - item.quantity) });
+              return JSON.stringify({
+                ...s,
+                stock: Math.max(0, s.stock - item.quantity),
+              });
             }
             return raw;
           } catch {
@@ -97,10 +103,16 @@ export async function createOrder(
 
     revalidatePath("/admin/orders");
     revalidatePath("/shop");
-    return { success: true, data: { orderId: order.id, publicId: order.publicId } };
+    return {
+      success: true,
+      data: { orderId: order.id, publicId: order.publicId },
+    };
   } catch (error) {
     console.error("[ORDER] create error:", error);
-    return { success: false, error: "Failed to place order. Please try again." };
+    return {
+      success: false,
+      error: "Failed to place order. Please try again.",
+    };
   }
 }
 
@@ -112,6 +124,7 @@ export type OrderStats = {
 
 export async function getOrderStats(): Promise<ActionResult<OrderStats>> {
   try {
+    if (!(await isAdmin())) return { success: false, error: "Unauthorized" };
     const [total, revenue, byStatus] = await Promise.all([
       db.order.count(),
       db.order.aggregate({ _sum: { totalCents: true } }),
@@ -122,7 +135,9 @@ export async function getOrderStats(): Promise<ActionResult<OrderStats>> {
       data: {
         total,
         totalRevenueCents: revenue._sum.totalCents ?? 0,
-        byStatus: Object.fromEntries(byStatus.map((g) => [g.status, g._count._all])),
+        byStatus: Object.fromEntries(
+          byStatus.map((g) => [g.status, g._count._all]),
+        ),
       },
     };
   } catch (error) {
@@ -136,12 +151,12 @@ export async function getOrders(params?: {
   search?: string;
 }): Promise<ActionResult<OrderSummary[]>> {
   try {
+    if (!(await isAdmin())) return { success: false, error: "Unauthorized" };
     const search = params?.search?.trim();
+    const statusFilter = z.enum(OrderStatus).safeParse(params?.status);
     const orders = await db.order.findMany({
       where: {
-        ...(params?.status && params.status !== "ALL"
-          ? { status: params.status as any }
-          : {}),
+        ...(statusFilter.success ? { status: statusFilter.data } : {}),
         ...(search
           ? {
               OR: [
@@ -202,7 +217,9 @@ export type OrderDetail = {
   }[];
 };
 
-export async function getOrderByPublicId(publicId: string): Promise<ActionResult<OrderDetail>> {
+export async function getOrderByPublicId(
+  publicId: string,
+): Promise<ActionResult<OrderDetail>> {
   try {
     const order = await db.order.findUnique({
       where: { publicId },
@@ -218,11 +235,18 @@ export async function getOrderByPublicId(publicId: string): Promise<ActionResult
 
 export async function updateOrderStatus(
   id: string,
-  status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED",
+  status: OrderStatus,
 ): Promise<ActionResult> {
   try {
-    await db.order.update({ where: { id }, data: { status } });
-    revalidatePath("/admin/orders");
+    if (!(await isAdmin())) return { success: false, error: "Unauthorized" };
+    const safeId = z.string().min(1).parse(id);
+    const safeStatus = z.enum(OrderStatus).parse(status);
+    await db.order.update({
+      where: { id: safeId },
+      data: { status: safeStatus },
+    });
+    revalidatePath("/admin/orders", "layout"); // covers list + all detail pages
+    revalidatePath("/account"); // customer order history
     return { success: true };
   } catch (error) {
     console.error("[ORDER] update status error:", error);

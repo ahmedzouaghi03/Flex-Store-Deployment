@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { isAdmin } from "@/lib/auth-guard";
+import { validateUpload } from "@/lib/upload-guard";
+
+const ALLOWED_VIDEO_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+];
 
 export async function POST(req: NextRequest) {
+  if (!(await isAdmin())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -11,9 +24,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const allowed = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
-    if (!allowed.includes(file.type)) {
-      return NextResponse.json({ error: "Only video files are allowed (mp4, webm, ogg)" }, { status: 400 });
+    const validation = validateUpload(file, ALLOWED_VIDEO_TYPES, "video");
+    if (!validation.ok) {
+      return NextResponse.json(
+        { error: validation.message },
+        { status: validation.status },
+      );
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
