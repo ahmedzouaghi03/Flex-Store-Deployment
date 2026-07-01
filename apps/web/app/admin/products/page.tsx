@@ -79,7 +79,7 @@ export default async function AdminProductsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 font-semibold text-[var(--color-text)]">
-                    {formatPrice(product.priceCents)}
+                    {formatPrice(product.priceCents / 100)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-1">

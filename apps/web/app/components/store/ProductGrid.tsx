@@ -1,7 +1,7 @@
 import { ProductCard } from "./ProductCard";
-import type { ProductListItem } from "@/types";
+import type { SerializedProduct } from "@/types";
 
-export function ProductGrid({ products }: { products: ProductListItem[] }) {
+export function ProductGrid({ products }: { products: SerializedProduct[] }) {
   if (products.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-[var(--color-border)] py-16 text-center">

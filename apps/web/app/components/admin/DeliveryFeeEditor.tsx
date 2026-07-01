@@ -60,20 +60,22 @@ export function DeliveryFeeEditor({
 }
 
 export function DeliveryFeeMiniPreview({ cents }: { cents: number }) {
+  const subtotal = 85;
+  const deliveryTnd = cents / 100;
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
       <div className="space-y-2 text-xs">
         <div className="flex justify-between text-[var(--color-muted)]">
           <span>Subtotal</span>
-          <span>{formatPrice(8500)}</span>
+          <span>{formatPrice(subtotal)}</span>
         </div>
         <div className="flex justify-between text-[var(--color-muted)]">
           <span>Delivery</span>
-          <span>{cents === 0 ? "Free" : formatPrice(cents)}</span>
+          <span>{cents === 0 ? "Free" : formatPrice(deliveryTnd)}</span>
         </div>
         <div className="flex justify-between border-t border-[var(--color-border)] pt-2 font-bold text-[var(--color-text)]">
           <span>Total</span>
-          <span>{formatPrice(8500 + cents)}</span>
+          <span>{formatPrice(subtotal + deliveryTnd)}</span>
         </div>
       </div>
     </div>

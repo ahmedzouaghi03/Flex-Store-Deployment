@@ -42,7 +42,6 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
 
   const orders = ordersResult.success ? (ordersResult.data ?? []) : [];
   const stats = statsResult.success ? statsResult.data : null;
-
   const activeStatus = status ?? "ALL";
 
   return (
@@ -66,7 +65,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
           />
           <StatCard
             label="Total Revenue"
-            value={formatPrice(stats.totalRevenueCents)}
+            value={formatPrice(stats.totalRevenue)}
             icon={DollarSign}
             color="bg-emerald-50 text-emerald-700"
           />
@@ -121,37 +120,35 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
                 {orders.map((order) => (
                   <ClickableRow
                     key={order.id}
-                    href={order.publicId ? `/admin/orders/${order.publicId}` : "#"}
+                    href={`/admin/orders/${order.orderNumber}`}
                     className="transition hover:bg-[var(--color-bg)]/60"
                   >
                     <td className="px-5 py-4">
                       <span className="font-mono text-xs font-bold text-[var(--color-muted)]">
-                        #{order.id.slice(0, 8).toUpperCase()}
+                        {order.orderNumber}
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="font-semibold text-[var(--color-text)]">{order.name}</p>
-                      {order.email && (
-                        <p className="text-xs text-[var(--color-muted)]">{order.email}</p>
+                      <p className="font-semibold text-[var(--color-text)]">{order.customerName}</p>
+                      {order.customerEmail && (
+                        <p className="text-xs text-[var(--color-muted)]">{order.customerEmail}</p>
                       )}
-                      {order.phone && (
-                        <p className="text-xs text-[var(--color-muted)]">{order.phone}</p>
-                      )}
+                      <p className="text-xs text-[var(--color-muted)]">{order.customerPhone}</p>
                       {order.city && (
                         <p className="text-xs text-[var(--color-muted)]">{order.city}</p>
                       )}
                     </td>
                     <td className="px-5 py-4 text-[var(--color-muted)]">
-                      {order.itemCount} item{order.itemCount !== 1 ? "s" : ""}
+                      {order.items.length} item{order.items.length !== 1 ? "s" : ""}
                     </td>
                     <td className="px-5 py-4 font-bold text-[var(--color-text)]">
-                      {formatPrice(order.totalCents)}
+                      {formatPrice(order.total)}
                     </td>
                     <td className="px-5 py-4">
                       <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
                     </td>
                     <td className="px-5 py-4 text-xs text-[var(--color-muted)]">
-                      {new Date(order.createdAt).toLocaleDateString("fr-DZ", {
+                      {new Date(order.createdAt).toLocaleDateString("fr-TN", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",

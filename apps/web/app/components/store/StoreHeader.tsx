@@ -6,11 +6,11 @@ import { CartDrawer } from "./CartDrawer";
 import { NavLinks } from "./NavLinks";
 import { UserMenu } from "./UserMenu";
 import { LanguageSelector } from "./LanguageSelector";
-import { getSession } from "@/lib/session";
+import { getCurrentUser } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
 
 export async function StoreHeader() {
-  const session = await getSession();
+  const session = await getCurrentUser();
   const t = await getTranslations("Nav");
 
   return (
@@ -41,7 +41,7 @@ export async function StoreHeader() {
             <div className="h-5 w-px bg-[var(--color-border)]" />
 
             {session ? (
-              <UserMenu name={session.name} email={session.email} />
+              <UserMenu name={session.name} email={session.email} role={session.role} />
             ) : (
               <Link
                 href="/account/login"

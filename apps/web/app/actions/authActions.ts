@@ -1,45 +1,56 @@
 "use server";
 
-import { createHmac } from "crypto";
+import { SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { db } from "@shoestore/db";
+import { comparePassword } from "@shoestore/utils/hash";
 
-const COOKIE = "admin_session";
-const SESSION_HOURS = 24;
+const COOKIE_NAME = "authToken";
+const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
 
-function createToken(): string {
-  const secret = process.env.AUTH_SECRET!;
-  const payload = Buffer.from(
-    JSON.stringify({ role: "admin", exp: Date.now() + SESSION_HOURS * 60 * 60 * 1000 }),
-  ).toString("base64");
-  const sig = createHmac("sha256", secret).update(payload).digest("hex");
-  return `${payload}.${sig}`;
+function getSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET environment variable is not set");
+  return new TextEncoder().encode(secret);
 }
 
 export async function login(
   _prev: { error: string } | null,
   formData: FormData,
 ): Promise<{ error: string }> {
-  const username = (formData.get("username") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
   const password = formData.get("password") as string;
 
-  const validUser = process.env.ADMIN_USERNAME;
-  const validPass = process.env.ADMIN_PASSWORD;
-
-  if (!validUser || !validPass) {
-    return { error: "Admin credentials are not configured." };
+  if (!email || !password) {
+    return { error: "Email and password are required." };
   }
 
-  if (username !== validUser || password !== validPass) {
-    return { error: "Incorrect username or password." };
+  const user = await db.user.findUnique({
+    where: { email, isDeleted: false },
+    select: { id: true, name: true, email: true, role: true, password: true },
+  });
+
+  if (!user || !["ADMIN", "SUPER_ADMIN"].includes(user.role)) {
+    return { error: "Invalid credentials." };
   }
+
+  const valid = await comparePassword(password, user.password);
+  if (!valid) return { error: "Invalid credentials." };
+
+  const secret = getSecret();
+  const token = await new SignJWT({ id: user.id, role: user.role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("7d")
+    .setIssuedAt()
+    .sign(secret);
 
   const jar = await cookies();
-  jar.set(COOKIE, createToken(), {
+  jar.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: SESSION_HOURS * 60 * 60,
+    maxAge: SEVEN_DAYS_SECONDS,
     path: "/",
   });
 
@@ -48,6 +59,6 @@ export async function login(
 
 export async function logout() {
   const jar = await cookies();
-  jar.delete(COOKIE);
+  jar.delete(COOKIE_NAME);
   redirect("/admin/login");
 }

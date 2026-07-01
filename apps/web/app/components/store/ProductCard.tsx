@@ -1,19 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
-
 import { formatPrice } from "@/lib/utils";
-import type { ProductListItem } from "@/types";
+import type { SerializedProduct } from "@/types";
 
-export function ProductCard({ product }: { product: ProductListItem }) {
+export function ProductCard({ product }: { product: SerializedProduct }) {
   return (
     <Link
       href={`/product/${product.slug}`}
       className="group block overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm transition hover:shadow-md hover:border-[var(--color-green-light)]"
     >
       <div className="relative aspect-square overflow-hidden bg-[var(--color-bg)]">
-        {product.imageUrl ? (
+        {product.primaryImage ? (
           <Image
-            src={product.imageUrl}
+            src={product.primaryImage}
             alt={product.name}
             fill
             className="object-cover transition duration-300 group-hover:scale-105"
@@ -24,30 +23,25 @@ export function ProductCard({ product }: { product: ProductListItem }) {
             No image
           </div>
         )}
-        {product.isFeatured ? (
+        {product.isFeatured && (
           <span className="absolute left-3 top-3 rounded-full bg-[var(--color-accent)] px-2.5 py-0.5 text-xs font-semibold text-white">
             Featured
           </span>
-        ) : null}
+        )}
       </div>
       <div className="p-4">
-        {product.brandName ? (
+        {product.category?.name && (
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
-            {product.brandName}
+            {product.category.name}
           </p>
-        ) : null}
+        )}
         <h3 className="mt-1 font-semibold text-[var(--color-text)] group-hover:text-[var(--color-accent)]">
           {product.name}
         </h3>
         <div className="mt-2 flex items-center gap-2">
           <span className="text-sm font-bold text-[var(--color-text)]">
-            {formatPrice(product.priceCents)}
+            {formatPrice(product.basePrice)}
           </span>
-          {product.compareAtPriceCents ? (
-            <span className="text-sm text-[var(--color-muted)] line-through">
-              {formatPrice(product.compareAtPriceCents)}
-            </span>
-          ) : null}
         </div>
       </div>
     </Link>

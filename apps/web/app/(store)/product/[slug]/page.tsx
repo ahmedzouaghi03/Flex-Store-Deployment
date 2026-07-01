@@ -35,61 +35,46 @@ export default async function ProductPage({
 
         {/* LEFT: interactive gallery */}
         <ProductGallery
-          images={product.images}
-          colorImages={product.colorImages}
+          colors={product.colors}
           productName={product.name}
+          mainImages={product.images.map((i) => i.url)}
         />
 
         {/* RIGHT: product info */}
         <div className="flex flex-col">
-          {product.brandName ? (
+          {product.category?.name && (
             <p className="text-sm font-semibold uppercase tracking-wider text-[var(--color-muted)]">
-              {product.brandName}
+              {product.category.name}
             </p>
-          ) : null}
+          )}
 
           <h1 className="mt-2 text-3xl font-bold text-[var(--color-text)]">
             {product.name}
           </h1>
 
           <div className="mt-4 flex items-center gap-3">
-            {product.priceCents > 0 ? (
-              <>
-                <span className="text-2xl font-bold text-[var(--color-text)]">
-                  {formatPrice(product.priceCents)}
-                </span>
-                {product.compareAtPriceCents ? (
-                  <span className="text-lg text-[var(--color-muted)] line-through">
-                    {formatPrice(product.compareAtPriceCents)}
-                  </span>
-                ) : null}
-              </>
+            {product.basePrice > 0 ? (
+              <span className="text-2xl font-bold text-[var(--color-text)]">
+                {formatPrice(product.basePrice)}
+              </span>
             ) : (
               <span className="text-lg text-[var(--color-muted)]">Price on request</span>
             )}
           </div>
 
-          {product.description ? (
+          {product.description && (
             <p className="mt-5 leading-relaxed text-[var(--color-muted)]">
               {product.description}
-            </p>
-          ) : null}
-
-          {product.categories.length > 0 && (
-            <p className="mt-3 text-xs text-[var(--color-muted)]">
-              {product.categories.join(" · ")}
             </p>
           )}
 
           <div className="mt-8">
             <ProductActions
               productId={product.id}
-              slug={product.slug}
-              name={product.name}
-              priceCents={product.priceCents}
-              imageUrl={product.imageUrl}
-              sizeStocks={product.sizeStocks}
-              colorImages={product.colorImages}
+              productSlug={product.slug}
+              productName={product.name}
+              basePrice={product.basePrice}
+              colors={product.colors}
             />
           </div>
         </div>

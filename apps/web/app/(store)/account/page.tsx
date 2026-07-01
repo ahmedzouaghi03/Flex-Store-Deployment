@@ -54,7 +54,7 @@ export default async function AccountPage() {
   }
 
   const orders = await db.order.findMany({
-    where: { email: session.email },
+    where: { userId: session.userId },
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { items: true } } },
   });
@@ -108,10 +108,10 @@ export default async function AccountPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <p className="font-mono text-xs font-bold text-[var(--color-muted)]">
-                      #{order.id.slice(0, 8).toUpperCase()}
+                      {order.orderNumber}
                     </p>
                     <p className="text-sm text-[var(--color-muted)]">
-                      {new Date(order.createdAt).toLocaleDateString("fr-DZ", {
+                      {new Date(order.createdAt).toLocaleDateString("fr-TN", {
                         day: "2-digit",
                         month: "long",
                         year: "numeric",
@@ -122,7 +122,7 @@ export default async function AccountPage() {
                     </p>
                   </div>
                   <div className="text-right space-y-2">
-                    <p className="font-bold text-[var(--color-text)]">{formatPrice(order.totalCents)}</p>
+                    <p className="font-bold text-[var(--color-text)]">{formatPrice(Number(order.total))}</p>
                     <OrderStatusBadge status={order.status} />
                   </div>
                 </div>

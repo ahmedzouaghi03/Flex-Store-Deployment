@@ -46,14 +46,14 @@ export default function LoginPage() {
           <form action={action} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-[var(--color-text)]">
-                Username
+                Email
               </label>
               <input
-                name="username"
-                type="text"
+                name="email"
+                type="email"
                 required
-                autoComplete="username"
-                placeholder="admin"
+                autoComplete="email"
+                placeholder="admin@example.com"
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none transition focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
               />
             </div>

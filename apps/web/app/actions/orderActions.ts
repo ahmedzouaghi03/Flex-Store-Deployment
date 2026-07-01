@@ -3,135 +3,127 @@
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { db } from "@shoestore/db";
-import { getStoreConfig } from "@/lib/store-config";
-import { getSession } from "@/lib/session";
-import type { CartItem, ActionResult } from "@/types";
+import { getCurrentUser } from "@/lib/session";
+import type { ActionResult, CreateOrderInput, SerializedOrder, OrderStatistics } from "@/types";
 
-function generatePublicId(): string {
-  return randomBytes(6).toString("base64url"); // 8 URL-safe chars
+function generateOrderNumber(): string {
+  return "FLEX-" + randomBytes(4).toString("hex").toUpperCase();
 }
 
-export type CustomerInfo = {
-  name: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-};
-
-export type OrderSummary = {
-  id: string;
-  publicId: string | null;
-  createdAt: Date;
-  status: string;
-  totalCents: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  city: string | null;
-  itemCount: number;
-};
-
 export async function createOrder(
-  customerInfo: CustomerInfo,
-  cartItems: CartItem[],
-): Promise<ActionResult<{ orderId: string; publicId: string | null }>> {
+  input: CreateOrderInput,
+): Promise<ActionResult<{ orderId: string; orderNumber: string }>> {
   try {
-    if (!customerInfo.name.trim()) return { success: false, error: "Name is required" };
-    if (!cartItems.length) return { success: false, error: "Cart is empty" };
+    if (!input.customerName.trim()) return { success: false, error: "Name is required" };
+    if (!input.customerPhone.trim()) return { success: false, error: "Phone is required" };
+    if (!input.address?.trim()) return { success: false, error: "Address is required" };
+    if (!input.items.length) return { success: false, error: "Cart is empty" };
 
-    const productIds = [...new Set(cartItems.map((i) => i.productId))];
-    const products = await db.product.findMany({
-      where: { id: { in: productIds } },
-      select: { id: true, priceCents: true, isPublished: true, isDeleted: true },
+    const variantIds = input.items.map((i) => i.variantId);
+    const variants = await db.productColorSize.findMany({
+      where: { id: { in: variantIds } },
+      select: {
+        id: true,
+        size: true,
+        stock: true,
+        priceOverride: true,
+        color: {
+          select: {
+            id: true,
+            name: true,
+            productId: true,
+            product: {
+              select: { id: true, name: true, basePrice: true, isPublished: true, colors: { select: { images: { orderBy: { order: "asc" }, take: 1, select: { url: true } } }, take: 1 } },
+            },
+          },
+        },
+      },
     });
-    const productById = new Map(products.map((p) => [p.id, p]));
 
-    for (const item of cartItems) {
-      const product = productById.get(item.productId);
-      if (!product || product.isDeleted || !product.isPublished) {
+    const variantMap = new Map(variants.map((v) => [v.id, v]));
+
+    for (const item of input.items) {
+      const variant = variantMap.get(item.variantId);
+      if (!variant) return { success: false, error: "One or more items are no longer available" };
+      if (!variant.color.product.isPublished)
         return { success: false, error: "One or more items are no longer available" };
-      }
+      if (variant.stock < item.quantity)
+        return { success: false, error: `Insufficient stock for ${variant.color.product.name} (${variant.size})` };
     }
 
-    const subtotalCents = cartItems.reduce(
-      (sum, i) => sum + productById.get(i.productId)!.priceCents * i.quantity,
-      0,
-    );
-    const deliveryFeeCents = getStoreConfig().deliveryFeeCents;
-    const totalCents = subtotalCents + deliveryFeeCents;
+    const settingsRow = await db.storeSettings.findFirst({ select: { deliveryFee: true } });
+    const deliveryFee = settingsRow ? Number(settingsRow.deliveryFee) : 0;
 
-    const session = await getSession();
-    const trimmedAddress = customerInfo.address?.trim() || null;
-    const trimmedCity = customerInfo.city?.trim() || null;
+    const subtotal = input.items.reduce((sum, item) => {
+      const v = variantMap.get(item.variantId)!;
+      const price = v.priceOverride != null ? Number(v.priceOverride) : Number(v.color.product.basePrice);
+      return sum + price * item.quantity;
+    }, 0);
+    const total = subtotal + deliveryFee;
+
+    const currentUser = await getCurrentUser();
 
     const order = await db.$transaction(async (tx) => {
+      const orderNumber = generateOrderNumber();
+
       const newOrder = await tx.order.create({
         data: {
-          publicId: generatePublicId(),
-          name: customerInfo.name.trim(),
-          email: customerInfo.email?.trim() || null,
-          phone: customerInfo.phone?.trim() || null,
-          address: trimmedAddress,
-          city: trimmedCity,
-          totalCents,
-          deliveryFeeCents,
-          userId: session?.userId,
+          orderNumber,
+          customerName: input.customerName.trim(),
+          customerPhone: input.customerPhone.trim(),
+          customerEmail: input.customerEmail?.trim() || null,
+          address: input.address.trim(),
+          city: input.city?.trim() || null,
+          subtotal,
+          shippingCost: deliveryFee,
+          total,
+          userId: currentUser?.id,
           items: {
-            create: cartItems.map((item) => ({
-              productId: item.productId,
-              productName: item.name,
-              imageUrl: item.imageUrl,
-              size: item.size,
-              colorName: item.colorName,
-              priceCents: productById.get(item.productId)!.priceCents,
-              quantity: item.quantity,
-            })),
+            create: input.items.map((item) => {
+              const v = variantMap.get(item.variantId)!;
+              const unitPrice =
+                v.priceOverride != null ? Number(v.priceOverride) : Number(v.color.product.basePrice);
+              const productImage = v.color.product.colors[0]?.images[0]?.url ?? null;
+              return {
+                variantId: item.variantId,
+                productId: v.color.productId,
+                productName: v.color.product.name,
+                colorName: v.color.name,
+                size: v.size,
+                productImage,
+                unitPrice,
+                totalPrice: unitPrice * item.quantity,
+                quantity: item.quantity,
+              };
+            }),
           },
         },
       });
 
-      // Decrement stock for each ordered size
-      for (const item of cartItems) {
-        if (!item.size) continue;
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-          select: { sizes: true },
-        });
-        if (!product) continue;
-        const updatedSizes = product.sizes.map((raw) => {
-          try {
-            const s = JSON.parse(raw) as { size: string; stock: number };
-            if (s.size === item.size) {
-              return JSON.stringify({ ...s, stock: Math.max(0, s.stock - item.quantity) });
-            }
-            return raw;
-          } catch {
-            return raw;
-          }
-        });
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { sizes: updatedSizes },
+      // Decrement stock
+      for (const item of input.items) {
+        await tx.productColorSize.update({
+          where: { id: item.variantId },
+          data: { stock: { decrement: item.quantity } },
         });
       }
 
-      // Save this address to the user's address book if it's new
-      if (session?.userId && trimmedAddress && trimmedCity) {
+      // Save address to address book
+      if (currentUser?.id && input.address.trim() && input.city?.trim()) {
         const existing = await tx.address.findFirst({
           where: {
-            userId: session.userId,
-            address: { equals: trimmedAddress, mode: "insensitive" },
-            city: { equals: trimmedCity, mode: "insensitive" },
+            userId: currentUser.id,
+            address: { equals: input.address.trim(), mode: "insensitive" },
+            city: { equals: input.city.trim(), mode: "insensitive" },
           },
         });
         if (!existing) {
           await tx.address.create({
             data: {
-              userId: session.userId,
-              address: trimmedAddress,
-              city: trimmedCity,
-              phone: customerInfo.phone?.trim() || null,
+              userId: currentUser.id,
+              address: input.address.trim(),
+              city: input.city.trim(),
+              phone: input.customerPhone.trim(),
             },
           });
         }
@@ -142,32 +134,25 @@ export async function createOrder(
 
     revalidatePath("/admin/orders");
     revalidatePath("/shop");
-    revalidatePath("/checkout");
-    return { success: true, data: { orderId: order.id, publicId: order.publicId } };
+    return { success: true, data: { orderId: order.id, orderNumber: order.orderNumber } };
   } catch (error) {
     console.error("[ORDER] create error:", error);
     return { success: false, error: "Failed to place order. Please try again." };
   }
 }
 
-export type OrderStats = {
-  total: number;
-  totalRevenueCents: number;
-  byStatus: Partial<Record<string, number>>;
-};
-
-export async function getOrderStats(): Promise<ActionResult<OrderStats>> {
+export async function getOrderStats(): Promise<ActionResult<OrderStatistics>> {
   try {
     const [total, revenue, byStatus] = await Promise.all([
       db.order.count(),
-      db.order.aggregate({ _sum: { totalCents: true } }),
+      db.order.aggregate({ _sum: { total: true } }),
       db.order.groupBy({ by: ["status"], _count: { _all: true } }),
     ]);
     return {
       success: true,
       data: {
         total,
-        totalRevenueCents: revenue._sum.totalCents ?? 0,
+        totalRevenue: Number(revenue._sum.total ?? 0),
         byStatus: Object.fromEntries(byStatus.map((g) => [g.status, g._count._all])),
       },
     };
@@ -180,42 +165,58 @@ export async function getOrderStats(): Promise<ActionResult<OrderStats>> {
 export async function getOrders(params?: {
   status?: string;
   search?: string;
-}): Promise<ActionResult<OrderSummary[]>> {
+}): Promise<ActionResult<SerializedOrder[]>> {
   try {
     const search = params?.search?.trim();
     const orders = await db.order.findMany({
       where: {
-        ...(params?.status && params.status !== "ALL"
-          ? { status: params.status as any }
-          : {}),
+        ...(params?.status && params.status !== "ALL" ? { status: params.status as any } : {}),
         ...(search
           ? {
               OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { email: { contains: search, mode: "insensitive" } },
-                { phone: { contains: search, mode: "insensitive" } },
+                { customerName: { contains: search, mode: "insensitive" } },
+                { customerEmail: { contains: search, mode: "insensitive" } },
+                { customerPhone: { contains: search, mode: "insensitive" } },
                 { city: { contains: search, mode: "insensitive" } },
+                { orderNumber: { contains: search, mode: "insensitive" } },
               ],
             }
           : {}),
       },
       orderBy: { createdAt: "desc" },
-      include: { _count: { select: { items: true } } },
+      include: { items: true },
     });
 
     return {
       success: true,
       data: orders.map((o) => ({
         id: o.id,
-        publicId: o.publicId,
-        createdAt: o.createdAt,
-        status: o.status,
-        totalCents: o.totalCents,
-        name: o.name,
-        email: o.email,
-        phone: o.phone,
+        orderNumber: o.orderNumber,
+        customerName: o.customerName,
+        customerPhone: o.customerPhone,
+        customerEmail: o.customerEmail,
+        address: o.address,
         city: o.city,
-        itemCount: o._count.items,
+        subtotal: Number(o.subtotal),
+        shippingCost: Number(o.shippingCost),
+        total: Number(o.total),
+        status: o.status,
+        notes: o.notes,
+        userId: o.userId,
+        items: o.items.map((i) => ({
+          id: i.id,
+          variantId: i.variantId,
+          productId: i.productId,
+          productName: i.productName,
+          colorName: i.colorName,
+          size: i.size,
+          productImage: i.productImage,
+          unitPrice: Number(i.unitPrice),
+          totalPrice: Number(i.totalPrice),
+          quantity: i.quantity,
+        })),
+        createdAt: o.createdAt.toISOString(),
+        updatedAt: o.updatedAt.toISOString(),
       })),
     };
   } catch (error) {
@@ -224,39 +225,46 @@ export async function getOrders(params?: {
   }
 }
 
-export type OrderDetail = {
-  id: string;
-  publicId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  status: string;
-  totalCents: number;
-  deliveryFeeCents: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  city: string | null;
-  items: {
-    id: string;
-    productId: string;
-    productName: string;
-    imageUrl: string | null;
-    size: string | null;
-    colorName: string | null;
-    priceCents: number;
-    quantity: number;
-  }[];
-};
-
-export async function getOrderByPublicId(publicId: string): Promise<ActionResult<OrderDetail>> {
+export async function getOrderByNumber(orderNumber: string): Promise<ActionResult<SerializedOrder>> {
   try {
     const order = await db.order.findUnique({
-      where: { publicId },
+      where: { orderNumber },
       include: { items: true },
     });
     if (!order) return { success: false, error: "Order not found" };
-    return { success: true, data: order };
+
+    return {
+      success: true,
+      data: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        customerPhone: order.customerPhone,
+        customerEmail: order.customerEmail,
+        address: order.address,
+        city: order.city,
+        subtotal: Number(order.subtotal),
+        shippingCost: Number(order.shippingCost),
+        total: Number(order.total),
+        status: order.status,
+        notes: order.notes,
+        userId: order.userId,
+        items: order.items.map((i) => ({
+          id: i.id,
+          variantId: i.variantId,
+          productId: i.productId,
+          productName: i.productName,
+          colorName: i.colorName,
+          size: i.size,
+          productImage: i.productImage,
+          unitPrice: Number(i.unitPrice),
+          totalPrice: Number(i.totalPrice),
+          quantity: i.quantity,
+        })),
+        createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
+      },
+    };
   } catch (error) {
     console.error("[ORDER] get error:", error);
     return { success: false, error: "Failed to load order" };
@@ -265,7 +273,7 @@ export async function getOrderByPublicId(publicId: string): Promise<ActionResult
 
 export async function updateOrderStatus(
   id: string,
-  status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED",
+  status: "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED",
 ): Promise<ActionResult> {
   try {
     await db.order.update({ where: { id }, data: { status } });

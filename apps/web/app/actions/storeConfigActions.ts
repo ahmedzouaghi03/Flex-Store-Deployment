@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getStoreConfig, saveStoreConfig, DEFAULT_CONFIG } from "@/lib/store-config";
+import { getDeliveryFee as getDeliveryFeeFromDB, saveDeliveryFee as saveDeliveryFeeInDB } from "./storeSettingsActions";
 import type { StoreConfig, StoreColors } from "@/lib/store-config";
 
 function revalidateAll() {
@@ -104,25 +105,23 @@ export async function saveColors(
   }
 }
 
+// deliveryFee is in cents (legacy admin UI convention) — convert to TND before storing
 export async function saveDeliveryFee(
   deliveryFeeCents: number,
 ): Promise<{ success: boolean; error?: string }> {
-  try {
-    if (!Number.isInteger(deliveryFeeCents) || deliveryFeeCents < 0) {
-      return { success: false, error: "Delivery fee must be a non-negative amount" };
-    }
-    const config = getStoreConfig();
-    config.deliveryFeeCents = deliveryFeeCents;
-    saveStoreConfig(config);
-    revalidateAll();
-    revalidatePath("/cart");
-    revalidatePath("/checkout");
-    return { success: true };
-  } catch {
-    return { success: false, error: "Failed to save" };
-  }
+  const result = await saveDeliveryFeeInDB(deliveryFeeCents / 100);
+  if (!result.success) return { success: false, error: result.error };
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
+  return { success: true };
 }
 
+export async function getDeliveryFee(): Promise<number> {
+  return getDeliveryFeeFromDB();
+}
+
+// Legacy alias — delivery fee is now stored in TND, not cents
 export async function getDeliveryFeeCents(): Promise<number> {
-  return getStoreConfig().deliveryFeeCents;
+  const tnd = await getDeliveryFeeFromDB();
+  return Math.round(tnd * 100);
 }

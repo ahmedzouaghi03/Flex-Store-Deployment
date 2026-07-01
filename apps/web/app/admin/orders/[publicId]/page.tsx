@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getOrderByPublicId } from "@/actions/orderActions";
+import { getOrderByNumber } from "@/actions/orderActions";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
@@ -11,12 +11,11 @@ type Props = { params: Promise<{ publicId: string }> };
 
 export default async function OrderDetailPage({ params }: Props) {
   const { publicId } = await params;
-  const result = await getOrderByPublicId(publicId);
+  const result = await getOrderByNumber(publicId);
 
   if (!result.success || !result.data) notFound();
 
   const order = result.data;
-  const shortId = order.id.slice(0, 8).toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -31,24 +30,24 @@ export default async function OrderDetailPage({ params }: Props) {
         </Link>
         <span className="text-[var(--color-border)]">/</span>
         <span className="font-mono text-sm font-bold text-[var(--color-text)]">
-          #{shortId}
+          {order.orderNumber}
         </span>
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-text)]">
-            Order #{shortId}
+            Order {order.orderNumber}
           </h1>
           <p className="mt-1 text-sm text-[var(--color-muted)]">
             Placed on{" "}
-            {new Date(order.createdAt).toLocaleDateString("fr-DZ", {
+            {new Date(order.createdAt).toLocaleDateString("fr-TN", {
               day: "2-digit",
               month: "long",
               year: "numeric",
             })}{" "}
             at{" "}
-            {new Date(order.createdAt).toLocaleTimeString("fr-DZ", {
+            {new Date(order.createdAt).toLocaleTimeString("fr-TN", {
               hour: "2-digit",
               minute: "2-digit",
             })}
@@ -73,10 +72,10 @@ export default async function OrderDetailPage({ params }: Props) {
             <ul className="divide-y divide-[var(--color-border)]">
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-center gap-4 px-5 py-4">
-                  {item.imageUrl ? (
+                  {item.productImage ? (
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]">
                       <Image
-                        src={item.imageUrl}
+                        src={item.productImage}
                         alt={item.productName}
                         fill
                         className="object-cover"
@@ -100,11 +99,11 @@ export default async function OrderDetailPage({ params }: Props) {
 
                   <div className="text-right">
                     <p className="font-bold text-[var(--color-text)]">
-                      {formatPrice(item.priceCents * item.quantity)}
+                      {formatPrice(item.totalPrice)}
                     </p>
                     {item.quantity > 1 && (
                       <p className="text-xs text-[var(--color-muted)]">
-                        {formatPrice(item.priceCents)} each
+                        {formatPrice(item.unitPrice)} each
                       </p>
                     )}
                   </div>
@@ -114,21 +113,17 @@ export default async function OrderDetailPage({ params }: Props) {
             <div className="space-y-2 border-t border-[var(--color-border)] bg-[var(--color-bg)] px-5 py-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-[var(--color-muted)]">Subtotal</span>
-                <span className="font-semibold text-[var(--color-text)]">
-                  {formatPrice(order.totalCents - order.deliveryFeeCents)}
-                </span>
+                <span className="font-semibold text-[var(--color-text)]">{formatPrice(order.subtotal)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-[var(--color-muted)]">Delivery fee</span>
                 <span className="font-semibold text-[var(--color-text)]">
-                  {order.deliveryFeeCents === 0 ? "Free" : formatPrice(order.deliveryFeeCents)}
+                  {order.shippingCost === 0 ? "Free" : formatPrice(order.shippingCost)}
                 </span>
               </div>
               <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-2">
                 <span className="text-sm font-semibold text-[var(--color-text)]">Total</span>
-                <span className="text-lg font-bold text-[var(--color-text)]">
-                  {formatPrice(order.totalCents)}
-                </span>
+                <span className="text-lg font-bold text-[var(--color-text)]">{formatPrice(order.total)}</span>
               </div>
             </div>
           </div>
@@ -144,26 +139,24 @@ export default async function OrderDetailPage({ params }: Props) {
             <dl className="space-y-3 text-sm">
               <div>
                 <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">Name</dt>
-                <dd className="mt-0.5 font-semibold text-[var(--color-text)]">{order.name}</dd>
+                <dd className="mt-0.5 font-semibold text-[var(--color-text)]">{order.customerName}</dd>
               </div>
-              {order.email && (
+              {order.customerEmail && (
                 <div>
                   <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">Email</dt>
                   <dd className="mt-0.5 flex items-center gap-1.5 text-[var(--color-text)]">
                     <Mail size={13} className="text-[var(--color-muted)]" />
-                    <a href={`mailto:${order.email}`} className="hover:underline">{order.email}</a>
+                    <a href={`mailto:${order.customerEmail}`} className="hover:underline">{order.customerEmail}</a>
                   </dd>
                 </div>
               )}
-              {order.phone && (
-                <div>
-                  <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">Phone</dt>
-                  <dd className="mt-0.5 flex items-center gap-1.5 text-[var(--color-text)]">
-                    <Phone size={13} className="text-[var(--color-muted)]" />
-                    <a href={`tel:${order.phone}`} className="hover:underline">{order.phone}</a>
-                  </dd>
-                </div>
-              )}
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-[var(--color-muted)]">Phone</dt>
+                <dd className="mt-0.5 flex items-center gap-1.5 text-[var(--color-text)]">
+                  <Phone size={13} className="text-[var(--color-muted)]" />
+                  <a href={`tel:${order.customerPhone}`} className="hover:underline">{order.customerPhone}</a>
+                </dd>
+              </div>
             </dl>
           </div>
 
@@ -186,8 +179,8 @@ export default async function OrderDetailPage({ params }: Props) {
             </h2>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-[var(--color-muted)]">Order ID</dt>
-                <dd className="font-mono text-xs font-bold text-[var(--color-text)]">#{shortId}</dd>
+                <dt className="text-[var(--color-muted)]">Order #</dt>
+                <dd className="font-mono text-xs font-bold text-[var(--color-text)]">{order.orderNumber}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-[var(--color-muted)]">Items</dt>
@@ -196,7 +189,7 @@ export default async function OrderDetailPage({ params }: Props) {
               <div className="flex justify-between">
                 <dt className="text-[var(--color-muted)]">Last updated</dt>
                 <dd className="text-[var(--color-text)]">
-                  {new Date(order.updatedAt).toLocaleDateString("fr-DZ", {
+                  {new Date(order.updatedAt).toLocaleDateString("fr-TN", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",

@@ -2,6 +2,8 @@
   "Nav": {
     "Home": "Home",
     "Shop": "Shop",
+    "About": "About",
+    "Contact": "Contact",
     "Cart": "Cart",
     "SignIn": "Sign In"
   },

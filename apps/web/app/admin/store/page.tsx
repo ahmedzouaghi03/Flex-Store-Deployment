@@ -1,11 +1,13 @@
 import { existsSync } from "fs";
 import { join } from "path";
 import { getStoreConfig } from "@/lib/store-config";
+import { getDeliveryFeeCents } from "@/actions/storeConfigActions";
 import { StoreSettingsClient } from "@/components/admin/StoreSettingsClient";
 
-export default function StoreSettingsPage() {
+export default async function StoreSettingsPage() {
   const config = getStoreConfig();
   const hasVideo = existsSync(join(process.cwd(), "public", "store-video.mp4"));
+  const deliveryFeeCents = await getDeliveryFeeCents();
 
   return (
     <div>
@@ -17,7 +19,7 @@ export default function StoreSettingsPage() {
         </p>
       </div>
 
-      <StoreSettingsClient config={config} hasVideo={hasVideo} />
+      <StoreSettingsClient config={{ ...config, deliveryFeeCents }} hasVideo={hasVideo} />
     </div>
   );
 }

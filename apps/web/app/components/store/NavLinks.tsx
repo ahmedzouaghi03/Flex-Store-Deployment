@@ -3,21 +3,24 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Home, Store } from "lucide-react";
+import { Home, Store, Info, Mail } from "lucide-react";
 
 export function NavLinks() {
   const pathname = usePathname();
   const t = useTranslations("Nav");
 
   const LINKS = [
-    { href: "/",     label: t("Home"), icon: Home },
-    { href: "/shop", label: t("Shop"), icon: Store },
+    { href: "/",         label: t("Home"),    icon: Home },
+    { href: "/shop",     label: t("Shop"),    icon: Store },
+    { href: "/about",   label: t("About"),   icon: Info },
+    { href: "/contact", label: t("Contact"), icon: Mail },
   ];
 
   return (
     <div className="flex items-center gap-1 rounded-2xl bg-[var(--color-bg)] p-1 border border-[var(--color-border)]">
       {LINKS.map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        const active =
+          href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
           <Link
             key={href}

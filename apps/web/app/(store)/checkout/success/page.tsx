@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, Package, UserPlus } from "lucide-react";
-import { getOrderByPublicId } from "@/actions/orderActions";
+import { getOrderByNumber } from "@/actions/orderActions";
 import { formatPrice } from "@/lib/utils";
 
 type SearchParams = Promise<{ ref?: string; name?: string; email?: string }>;
@@ -10,11 +10,11 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
   const { ref, name, email } = await searchParams;
 
   const order = ref
-    ? await getOrderByPublicId(ref).then((r) => (r.success ? r.data : null))
+    ? await getOrderByNumber(ref).then((r) => (r.success ? r.data : null))
     : null;
 
-  const displayName = order?.name ?? name ?? "there";
-  const shortId = order?.id.slice(0, 8).toUpperCase();
+  const displayName = order?.customerName ?? name ?? "there";
+  const orderRef = order?.orderNumber ?? ref;
 
   return (
     <main className="mx-auto max-w-xl px-6 py-16 space-y-6">
@@ -25,17 +25,15 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
             <CheckCircle2 className="h-14 w-14 text-emerald-500" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-[var(--color-text)]">
-          Order Placed!
-        </h1>
+        <h1 className="text-3xl font-bold text-[var(--color-text)]">Order Placed!</h1>
         <p className="text-[var(--color-muted)]">
           Thanks {displayName.split(" ")[0]}! We&apos;ll contact you shortly to confirm your order and arrange delivery.
         </p>
-        {shortId && (
+        {orderRef && (
           <div className="inline-block rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2">
             <p className="text-xs text-[var(--color-muted)]">
               Order reference:{" "}
-              <span className="font-mono font-bold text-[var(--color-text)]">#{shortId}</span>
+              <span className="font-mono font-bold text-[var(--color-text)]">{orderRef}</span>
             </p>
           </div>
         )}
@@ -53,9 +51,9 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
           <ul className="divide-y divide-[var(--color-border)]">
             {order.items.map((item) => (
               <li key={item.id} className="flex items-center gap-4 px-5 py-4">
-                {item.imageUrl ? (
+                {item.productImage ? (
                   <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-xl border border-[var(--color-border)]">
-                    <Image src={item.imageUrl} alt={item.productName} fill className="object-cover" sizes="48px" />
+                    <Image src={item.productImage} alt={item.productName} fill className="object-cover" sizes="48px" />
                   </div>
                 ) : (
                   <div className="h-14 w-12 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]" />
@@ -69,7 +67,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
                   </p>
                 </div>
                 <p className="text-sm font-bold text-[var(--color-text)] shrink-0">
-                  {formatPrice(item.priceCents * item.quantity)}
+                  {formatPrice(item.totalPrice)}
                 </p>
               </li>
             ))}
@@ -77,21 +75,17 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
           <div className="space-y-2 border-t border-[var(--color-border)] bg-[var(--color-bg)] px-5 py-4">
             <div className="flex justify-between text-sm">
               <span className="text-[var(--color-muted)]">Subtotal</span>
-              <span className="font-semibold text-[var(--color-text)]">
-                {formatPrice(order.totalCents - order.deliveryFeeCents)}
-              </span>
+              <span className="font-semibold text-[var(--color-text)]">{formatPrice(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-[var(--color-muted)]">Delivery fee</span>
               <span className="font-semibold text-[var(--color-text)]">
-                {order.deliveryFeeCents === 0 ? "Free" : formatPrice(order.deliveryFeeCents)}
+                {order.shippingCost === 0 ? "Free" : formatPrice(order.shippingCost)}
               </span>
             </div>
             <div className="flex justify-between border-t border-[var(--color-border)] pt-2">
               <span className="text-sm font-semibold text-[var(--color-text)]">Total</span>
-              <span className="text-sm font-bold text-[var(--color-text)]">
-                {formatPrice(order.totalCents)}
-              </span>
+              <span className="text-sm font-bold text-[var(--color-text)]">{formatPrice(order.total)}</span>
             </div>
           </div>
         </div>

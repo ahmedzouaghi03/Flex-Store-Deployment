@@ -6,7 +6,7 @@ import { useCart } from "@/cart-context";
 import { formatPrice } from "@/lib/utils";
 
 export function CartDrawer() {
-  const { items, count, totalCents, drawerOpen, closeDrawer, updateQty, removeItem } = useCart();
+  const { items, count, total, drawerOpen, closeDrawer, updateQty, removeItem } = useCart();
 
   if (!drawerOpen) return null;
 
@@ -54,10 +54,10 @@ export function CartDrawer() {
             <div className="space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
-                  {item.imageUrl ? (
+                  {item.image ? (
                     <img
-                      src={item.imageUrl}
-                      alt={item.name}
+                      src={item.image}
+                      alt={item.productName}
                       className="h-18 w-16 flex-shrink-0 rounded-xl object-cover"
                       style={{ height: 72 }}
                     />
@@ -66,7 +66,7 @@ export function CartDrawer() {
                   )}
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-[var(--color-text)] text-sm">{item.name}</p>
+                    <p className="truncate font-semibold text-[var(--color-text)] text-sm">{item.productName}</p>
                     <div className="mt-0.5 flex flex-wrap gap-1.5">
                       {item.size && (
                         <span className="rounded-full bg-white border border-[var(--color-border)] px-2 py-0.5 text-xs text-[var(--color-muted)]">
@@ -83,7 +83,7 @@ export function CartDrawer() {
                       )}
                     </div>
                     <p className="mt-1 text-sm font-bold text-[var(--color-text)]">
-                      {formatPrice(item.priceCents)}
+                      {formatPrice(item.unitPrice)}
                     </p>
 
                     <div className="mt-2 flex items-center justify-between">
@@ -123,7 +123,7 @@ export function CartDrawer() {
           <div className="border-t border-[var(--color-border)] px-5 py-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[var(--color-muted)]">Subtotal</span>
-              <span className="font-bold text-[var(--color-text)]">{formatPrice(totalCents)}</span>
+              <span className="font-bold text-[var(--color-text)]">{formatPrice(total)}</span>
             </div>
             <Link
               href="/checkout"

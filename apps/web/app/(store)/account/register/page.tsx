@@ -28,7 +28,7 @@ function RegisterForm() {
     e.preventDefault();
     setError("");
     startTransition(async () => {
-      const result = await registerUser({ name, email, phone, password });
+      const result = await registerUser({ name, email, phoneNumber: phone, password });
       if (!result.success) {
         setError(result.error ?? "Something went wrong.");
         return;
