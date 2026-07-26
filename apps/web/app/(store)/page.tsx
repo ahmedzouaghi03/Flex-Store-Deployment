@@ -69,13 +69,15 @@ export default async function HomePage() {
                   {hero.cta1}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-                <a
-                  href="#video"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                >
-                  <Play className="h-4 w-4 fill-white" />
-                  {hero.cta2}
-                </a>
+                {hasVideo && (
+                  <a
+                    href="#video"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                  >
+                    <Play className="h-4 w-4 fill-white" />
+                    {hero.cta2}
+                  </a>
+                )}
               </div>
             </div>
 
@@ -124,38 +126,25 @@ export default async function HomePage() {
       </section>
 
       {/* ── VIDEO ────────────────────────────────────────────────────── */}
-      <section id="video" className="py-24 bg-[var(--color-bg)]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
-              {video.label}
-            </p>
-            <h2 className="mt-2 text-3xl font-bold text-[var(--color-text)] md:text-4xl">
-              {video.title}
-            </h2>
-            <p className="mt-3 text-sm text-[var(--color-muted)]">{video.desc}</p>
-          </div>
+      {hasVideo && (
+        <section id="video" className="py-24 bg-[var(--color-bg)]">
+          <div className="mx-auto max-w-6xl px-6">
+            <div className="mb-10 text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
+                {video.label}
+              </p>
+              <h2 className="mt-2 text-3xl font-bold text-[var(--color-text)] md:text-4xl">
+                {video.title}
+              </h2>
+              <p className="mt-3 text-sm text-[var(--color-muted)]">{video.desc}</p>
+            </div>
 
-          <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
-            {hasVideo ? (
+            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
               <AutoPlayVideo src="/store-video.mp4" />
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-green-dark)] via-[var(--color-green)] to-[var(--color-green-mid)]" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/25 backdrop-blur-sm">
-                    <Play className="ml-1 h-8 w-8 fill-white text-white" />
-                  </div>
-                  <p className="text-sm text-white/50">Upload your video from the admin panel</p>
-                </div>
-                <div className="absolute top-5 left-5 rounded-full border border-white/20 bg-black/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                  FLEX COMFORT SHOES
-                </div>
-              </>
-            )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── PRODUCTS ─────────────────────────────────────────────────── */}
       <section className="border-t border-[var(--color-border)] py-20 bg-white">

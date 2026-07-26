@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getStoreConfig, saveStoreConfig, DEFAULT_CONFIG } from "@/lib/store-config";
-import { getDeliveryFee as getDeliveryFeeFromDB, saveDeliveryFee as saveDeliveryFeeInDB } from "./storeSettingsActions";
+import { getDeliveryFee as getDeliveryFeeFromDB, saveDeliveryFee as saveDeliveryFeeInDB, getContactInfo as getContactInfoFromDB, saveContactInfo as saveContactInfoInDB } from "./storeSettingsActions";
 import type { StoreConfig, StoreColors } from "@/lib/store-config";
+import type { ContactInfo } from "@/types";
 
 function revalidateAll() {
   revalidatePath("/", "layout");
@@ -124,4 +125,17 @@ export async function getDeliveryFee(): Promise<number> {
 export async function getDeliveryFeeCents(): Promise<number> {
   const tnd = await getDeliveryFeeFromDB();
   return Math.round(tnd * 100);
+}
+
+export async function getContactInfo(): Promise<ContactInfo> {
+  return getContactInfoFromDB();
+}
+
+export async function saveContactInfo(
+  data: ContactInfo,
+): Promise<{ success: boolean; error?: string }> {
+  const result = await saveContactInfoInDB(data);
+  if (!result.success) return { success: false, error: result.error };
+  revalidatePath("/contact");
+  return { success: true };
 }

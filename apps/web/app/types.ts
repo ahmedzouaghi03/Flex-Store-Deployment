@@ -193,5 +193,16 @@ export type SerializedStoreSettings = {
   footerCtaDesc: string | null;
   footerCtaBtn: string | null;
   deliveryFee: number;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  contactLocation: string | null;
+  contactResponseTime: string | null;
   usps: StoreUspItem[];
+};
+
+export type ContactInfo = {
+  email: string;
+  phone: string;
+  location: string;
+  responseTime: string;
 };

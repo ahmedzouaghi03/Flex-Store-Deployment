@@ -2,7 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@shoestore/db";
-import type { ActionResult, SerializedStoreSettings } from "@/types";
+import type { ActionResult, ContactInfo, SerializedStoreSettings } from "@/types";
+
+const DEFAULT_CONTACT: ContactInfo = {
+  email: "contact@flexshoes.tn",
+  phone: "+216 XX XXX XXX",
+  location: "Tunisia",
+  responseTime: "Within 24 hours",
+};
 
 async function getOrCreate() {
   const existing = await db.storeSettings.findFirst();
@@ -33,6 +40,10 @@ function serialize(s: any, usps: any[]): SerializedStoreSettings {
     footerCtaDesc: s.footerCtaDesc,
     footerCtaBtn: s.footerCtaBtn,
     deliveryFee: Number(s.deliveryFee),
+    contactEmail: s.contactEmail,
+    contactPhone: s.contactPhone,
+    contactLocation: s.contactLocation,
+    contactResponseTime: s.contactResponseTime,
     usps: usps.map((u) => ({ id: u.id, label: u.label, desc: u.desc, order: u.order })),
   };
 }
@@ -145,5 +156,61 @@ export async function getDeliveryFee(): Promise<number> {
     return settings ? Number(settings.deliveryFee) : 0;
   } catch {
     return 0;
+  }
+}
+
+export async function getContactInfo(): Promise<ContactInfo> {
+  try {
+    const settings = await db.storeSettings.findFirst({
+      select: {
+        contactEmail: true,
+        contactPhone: true,
+        contactLocation: true,
+        contactResponseTime: true,
+      },
+    });
+    if (!settings) return DEFAULT_CONTACT;
+    return {
+      email: settings.contactEmail?.trim() || DEFAULT_CONTACT.email,
+      phone: settings.contactPhone?.trim() || DEFAULT_CONTACT.phone,
+      location: settings.contactLocation?.trim() || DEFAULT_CONTACT.location,
+      responseTime: settings.contactResponseTime?.trim() || DEFAULT_CONTACT.responseTime,
+    };
+  } catch {
+    return DEFAULT_CONTACT;
+  }
+}
+
+export async function saveContactInfo(data: {
+  email: string;
+  phone: string;
+  location: string;
+  responseTime: string;
+}): Promise<ActionResult> {
+  try {
+    const email = data.email.trim();
+    const phone = data.phone.trim();
+    const location = data.location.trim();
+    const responseTime = data.responseTime.trim();
+
+    if (!email || !phone || !location) {
+      return { success: false, error: "Email, phone, and location are required" };
+    }
+
+    const settings = await getOrCreate();
+    await db.storeSettings.update({
+      where: { id: settings.id },
+      data: {
+        contactEmail: email,
+        contactPhone: phone,
+        contactLocation: location,
+        contactResponseTime: responseTime || DEFAULT_CONTACT.responseTime,
+      },
+    });
+    revalidatePath("/contact");
+    return { success: true };
+  } catch (error) {
+    console.error("[STORE SETTINGS] saveContactInfo error:", error);
+    return { success: false, error: "Failed to save contact info" };
   }
 }

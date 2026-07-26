@@ -1,13 +1,21 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import { ContactForm } from "@/components/store/ContactForm";
+import { getContactInfo } from "@/actions/storeConfigActions";
 
-const INFO = [
-  { icon: Mail,   label: "Email",    value: "contact@flexshoes.tn",  href: "mailto:contact@flexshoes.tn" },
-  { icon: Phone,  label: "Phone",    value: "+216 XX XXX XXX",        href: "tel:+216XXXXXXXX" },
-  { icon: MapPin, label: "Location", value: "Tunisia",                href: null },
-];
+function phoneHref(phone: string) {
+  const digits = phone.replace(/[^\d+]/g, "");
+  return digits ? `tel:${digits}` : null;
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const contact = await getContactInfo();
+
+  const INFO = [
+    { icon: Mail, label: "Email", value: contact.email, href: `mailto:${contact.email}` },
+    { icon: Phone, label: "Phone", value: contact.phone, href: phoneHref(contact.phone) },
+    { icon: MapPin, label: "Location", value: contact.location, href: null as string | null },
+  ];
+
   return (
     <main>
       {/* Hero */}
@@ -54,7 +62,7 @@ export default function ContactPage() {
 
               <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">Response Time</p>
-                <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">Within 24 hours</p>
+                <p className="mt-1 text-sm font-semibold text-[var(--color-text)]">{contact.responseTime}</p>
                 <p className="mt-1 text-xs text-[var(--color-muted)]">
                   We read every message and reply as quickly as we can.
                 </p>

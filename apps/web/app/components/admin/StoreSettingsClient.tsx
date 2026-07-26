@@ -8,10 +8,12 @@ import { HeroTextEditor } from "./HeroTextEditor";
 import { VideoTextEditor, FooterCtaEditor } from "./VideoTextEditor";
 import { ColorEditor } from "./ColorEditor";
 import { DeliveryFeeEditor, DeliveryFeeMiniPreview } from "./DeliveryFeeEditor";
+import { ContactInfoEditor, ContactInfoMiniPreview } from "./ContactInfoEditor";
 import { HeroPhotoUpload } from "./HeroPhotoUpload";
 import { VideoUpload } from "./VideoUpload";
 import { LogoUpload } from "./LogoUpload";
 import { StorePreview } from "./StorePreview";
+import type { ContactInfo } from "@/types";
 
 // ── Reset bar ──────────────────────────────────────────────────────────────
 
@@ -307,13 +309,22 @@ function HeroPhotoMiniPreviewWithVersion({ version }: { version: number }) {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig; hasVideo: boolean }) {
+export function StoreSettingsClient({
+  config,
+  hasVideo,
+  contactInfo,
+}: {
+  config: StoreConfig;
+  hasVideo: boolean;
+  contactInfo: ContactInfo;
+}) {
   const [heroPreview, setHeroPreview]         = useState(config.hero);
   const [photoCardPreview, setPhotoCardPreview] = useState(config.photoCard);
   const [videoPreview, setVideoPreview]       = useState(config.video);
   const [footerPreview, setFooterPreview]     = useState(config.footerCta);
   const [colorPreview, setColorPreview]       = useState<StoreColors>(config.colors);
   const [deliveryFeePreview, setDeliveryFeePreview] = useState(config.deliveryFeeCents);
+  const [contactPreview, setContactPreview]   = useState(contactInfo);
   const [logoVersion, setLogoVersion]         = useState(0);
   const [heroVersion, setHeroVersion]         = useState(0);
 
@@ -398,6 +409,14 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
         desc="Flat fee added to every order's total at checkout."
         editor={<DeliveryFeeEditor initialCents={config.deliveryFeeCents} onPreviewChange={setDeliveryFeePreview} />}
         preview={<DeliveryFeeMiniPreview cents={deliveryFeePreview} />}
+      />
+
+      {/* Contact info */}
+      <EditRow
+        title="📞 Contact Info"
+        desc="Email, phone, and location shown on the public Contact page."
+        editor={<ContactInfoEditor initial={contactInfo} onPreviewChange={setContactPreview} />}
+        preview={<ContactInfoMiniPreview info={contactPreview} />}
       />
 
       {/* ── Full-page scrollable preview ── */}
