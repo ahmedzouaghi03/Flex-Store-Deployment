@@ -2,6 +2,11 @@
 
 export type SizeStock = { size: string; stock: number };
 
+export interface UploadResponse {
+  ufsUrl: string;
+  url: string;
+}
+
 export type ColorImage = {
   name: string;
   hex: string;
