@@ -57,7 +57,7 @@ export default async function HomePage() {
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-green-bright)]" />
                 {hero.badge}
               </span>
-              <h1 className="mt-6 text-6xl font-black leading-[1.05] tracking-tight text-white md:text-7xl">
+              <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl">
                 {hero.line1}
                 <br />
                 <span className="text-[var(--color-green-bright)] drop-shadow-[0_0_40px_rgba(158,212,58,0.4)]">
@@ -117,7 +117,7 @@ export default async function HomePage() {
       {/* ── USP BAR ──────────────────────────────────────────────────── */}
       <section className="border-b border-[var(--color-border)] bg-white">
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-8">
             {usp.map((item, i) => {
               const Icon = USP_ICONS[i] ?? Star;
               return (
@@ -160,7 +160,7 @@ export default async function HomePage() {
       {/* ── PRODUCTS ─────────────────────────────────────────────────── */}
       <section className="border-t border-[var(--color-border)] py-20 bg-white">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 flex items-end justify-between gap-4">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
                 {collection.label}

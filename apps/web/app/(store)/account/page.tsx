@@ -23,7 +23,7 @@ export default async function AccountPage() {
           <h1 className="text-2xl font-bold text-[var(--color-text)]">{t("Title")}</h1>
           <p className="text-[var(--color-muted)]">{t("Subtitle")}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
             href="/account/login"
             className="flex flex-col items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-6 transition hover:border-[var(--color-accent)]/40 hover:bg-[var(--color-accent)]/5"

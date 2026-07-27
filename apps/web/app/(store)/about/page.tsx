@@ -56,8 +56,8 @@ export default function AboutPage() {
         <div className="mx-auto max-w-4xl px-6 py-12">
           <div className="grid grid-cols-3 divide-x divide-[var(--color-border)]">
             {STATS.map((s) => (
-              <div key={s.label} className="text-center px-4">
-                <p className="text-3xl font-black text-[var(--color-accent)] md:text-4xl">{s.value}</p>
+              <div key={s.label} className="text-center px-1 sm:px-4">
+                <p className="text-xl font-black text-[var(--color-accent)] sm:text-3xl md:text-4xl">{s.value}</p>
                 <p className="mt-1 text-xs font-semibold text-[var(--color-muted)] sm:text-sm">{s.label}</p>
               </div>
             ))}
