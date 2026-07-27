@@ -217,3 +217,73 @@ export async function toggleProductFeatured(
     return { success: false, error: "Failed to update product" };
   }
 }
+
+// ── Inline table edits ──────────────────────────────────────────────────────
+
+export async function updateProductQuickFields(
+  id: string,
+  data: { name?: string; priceCents?: number },
+): Promise<ActionResult> {
+  try {
+    const update: { name?: string; basePrice?: number } = {};
+    if (data.name !== undefined) {
+      const name = data.name.trim();
+      if (!name) return { success: false, error: "Name cannot be empty" };
+      update.name = name;
+    }
+    if (data.priceCents !== undefined) {
+      if (isNaN(data.priceCents) || data.priceCents < 0) {
+        return { success: false, error: "Enter a valid price" };
+      }
+      update.basePrice = data.priceCents / 100;
+    }
+    await db.product.update({ where: { id }, data: update });
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] updateProductQuickFields error:", error);
+    return { success: false, error: "Failed to update product" };
+  }
+}
+
+// ── Bulk actions ─────────────────────────────────────────────────────────────
+
+export async function bulkDeleteProducts(ids: string[]): Promise<ActionResult> {
+  try {
+    await db.product.deleteMany({ where: { id: { in: ids } } });
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] bulkDeleteProducts error:", error);
+    return { success: false, error: "Failed to delete products" };
+  }
+}
+
+export async function bulkSetPublished(ids: string[], value: boolean): Promise<ActionResult> {
+  try {
+    await db.product.updateMany({ where: { id: { in: ids } }, data: { isPublished: value } });
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] bulkSetPublished error:", error);
+    return { success: false, error: "Failed to update products" };
+  }
+}
+
+export async function bulkSetFeatured(ids: string[], value: boolean): Promise<ActionResult> {
+  try {
+    await db.product.updateMany({ where: { id: { in: ids } }, data: { isFeatured: value } });
+    revalidatePath("/");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] bulkSetFeatured error:", error);
+    return { success: false, error: "Failed to update products" };
+  }
+}
