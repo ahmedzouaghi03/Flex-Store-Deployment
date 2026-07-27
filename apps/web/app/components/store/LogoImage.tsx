@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-export function LogoImage({ height = 40 }: { height?: number }) {
+export function LogoImage({ height = 40, src }: { height?: number; src?: string | null }) {
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
+  if (!src || failed) {
     return (
       <span className="rounded-lg bg-[var(--color-green)] px-2.5 py-1 text-sm font-black tracking-wide text-white">
         FLEX
@@ -15,7 +15,7 @@ export function LogoImage({ height = 40 }: { height?: number }) {
 
   return (
     <img
-      src="/store-logo.png"
+      src={src}
       alt="Store logo"
       onError={() => setFailed(true)}
       style={{ height, width: "auto" }}

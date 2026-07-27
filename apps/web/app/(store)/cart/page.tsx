@@ -1,14 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { getDeliveryFee } from "@/actions/storeSettingsActions";
+import { CartItemVariantEditor } from "@/components/store/CartItemVariantEditor";
 
 export default function CartPage() {
-  const { items, totalCents, updateQty, removeItem } = useCart();
+  const { items, total, updateQty, removeItem, isHydrated } = useCart();
   const t = useTranslations("Cart");
+  const [deliveryFee, setDeliveryFee] = useState(0);
+
+  useEffect(() => {
+    getDeliveryFee().then(setDeliveryFee);
+  }, []);
+
+  if (!isHydrated) return null;
 
   if (items.length === 0) {
     return (
@@ -38,10 +48,10 @@ export default function CartPage() {
               key={item.id}
               className="flex gap-4 rounded-2xl border border-[var(--color-border)] bg-white p-4"
             >
-              {item.imageUrl ? (
+              {item.image ? (
                 <img
-                  src={item.imageUrl}
-                  alt={item.name}
+                  src={item.image}
+                  alt={item.productName}
                   className="h-24 w-20 flex-shrink-0 rounded-xl object-cover"
                 />
               ) : (
@@ -52,10 +62,10 @@ export default function CartPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <Link
-                      href={`/product/${item.slug}`}
+                      href={`/product/${item.productSlug}`}
                       className="font-semibold text-[var(--color-text)] hover:text-[var(--color-accent)] transition"
                     >
-                      {item.name}
+                      {item.productName}
                     </Link>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                       {item.size && (
@@ -74,6 +84,9 @@ export default function CartPage() {
                           {item.colorName}
                         </span>
                       )}
+                    </div>
+                    <div className="mt-1.5">
+                      <CartItemVariantEditor item={item} />
                     </div>
                   </div>
                   <button
@@ -103,7 +116,7 @@ export default function CartPage() {
                     </button>
                   </div>
                   <span className="font-bold text-[var(--color-text)]">
-                    {formatPrice(item.priceCents * item.quantity)}
+                    {formatPrice(item.unitPrice * item.quantity)}
                   </span>
                 </div>
               </div>
@@ -119,17 +132,19 @@ export default function CartPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-[var(--color-muted)]">{t("Subtotal")}</span>
-                <span className="font-semibold text-[var(--color-text)]">{formatPrice(totalCents)}</span>
+                <span className="font-semibold text-[var(--color-text)]">{formatPrice(total)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--color-muted)]">{t("Shipping")}</span>
-                <span className="font-semibold text-green-600">{t("Free")}</span>
+                <span className={`font-semibold ${deliveryFee === 0 ? "text-green-600" : "text-[var(--color-text)]"}`}>
+                  {deliveryFee === 0 ? t("Free") : formatPrice(deliveryFee)}
+                </span>
               </div>
             </div>
 
             <div className="border-t border-[var(--color-border)] pt-3 flex justify-between">
               <span className="font-bold text-[var(--color-text)]">{t("Total")}</span>
-              <span className="font-bold text-[var(--color-text)]">{formatPrice(totalCents)}</span>
+              <span className="font-bold text-[var(--color-text)]">{formatPrice(total + deliveryFee)}</span>
             </div>
 
             <Link

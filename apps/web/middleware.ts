@@ -1,56 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
-const COOKIE = "admin_session";
+const COOKIE_NAME = "authToken";
+const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN"]);
 
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
-  }
-  return bytes;
+function getSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET ?? "";
+  return new TextEncoder().encode(secret);
 }
 
-async function isValidToken(token: string): Promise<boolean> {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret) return false;
-
-  const parts = token.split(".");
-  if (parts.length !== 2) return false;
-  const [payload, sig] = parts;
-
+async function getAdminPayload(token: string): Promise<{ role: string } | null> {
+  if (!token || !process.env.JWT_SECRET) return null;
   try {
-    const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      enc.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["verify"],
-    );
-
-    const valid = await crypto.subtle.verify(
-      "HMAC",
-      key,
-      hexToBytes(sig),
-      enc.encode(payload),
-    );
-    if (!valid) return false;
-
-    const { exp } = JSON.parse(atob(payload)) as { exp: number };
-    return Date.now() < exp;
+    const { payload } = await jwtVerify(token, getSecret());
+    return { role: payload.role as string };
   } catch {
-    return false;
+    return null;
   }
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // shop.<domain> (or shop.localhost in dev) serves the /shop listing at its root.
+  // Generic host check — no env config needed, works the same in prod and locally.
+  const hostname = req.headers.get("host")?.split(":")[0] ?? "";
+  if (hostname.startsWith("shop.") && pathname === "/") {
+    return NextResponse.rewrite(new URL("/shop", req.url));
+  }
+
   if (!pathname.startsWith("/admin")) return NextResponse.next();
   if (pathname === "/admin/login") return NextResponse.next();
 
-  const token = req.cookies.get(COOKIE)?.value ?? "";
-  if (await isValidToken(token)) return NextResponse.next();
+  const token = req.cookies.get(COOKIE_NAME)?.value ?? "";
+  const payload = await getAdminPayload(token);
+
+  if (payload && ADMIN_ROLES.has(payload.role)) {
+    return NextResponse.next();
+  }
 
   const loginUrl = req.nextUrl.clone();
   loginUrl.pathname = "/admin/login";
@@ -59,5 +46,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/", "/admin/:path*"],
 };

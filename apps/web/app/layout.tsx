@@ -10,7 +10,11 @@ export const metadata: Metadata = {
   description: "Léger. Flexible. Confortable.",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { colors } = getStoreConfig();
   const locale = await getLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -21,11 +25,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] antialiased"
         style={
           {
-            "--color-accent":       colors.accent,
-            "--color-green-dark":   colors["green-dark"],
-            "--color-green":        colors.green,
-            "--color-green-mid":    colors["green-mid"],
-            "--color-green-light":  colors["green-light"],
+            "--color-accent": colors.accent,
+            "--color-green-dark": colors["green-dark"],
+            "--color-green": colors.green,
+            "--color-green-mid": colors["green-mid"],
+            "--color-green-light": colors["green-light"],
             "--color-green-bright": colors["green-bright"],
           } as React.CSSProperties
         }

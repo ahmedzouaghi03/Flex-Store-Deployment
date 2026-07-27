@@ -1,51 +1,82 @@
-import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import { jwtVerify, SignJWT } from "jose";
+import { db } from "@shoestore/db";
 
-const SECRET = process.env.SESSION_SECRET ?? "dev-secret-please-change-in-production";
+const COOKIE_NAME = "authToken";
 
-export type SessionPayload = { userId: string; email: string; name: string };
+export type AuthUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  phoneNumber?: string | null;
+  address?: string | null;
+};
 
-function sign(payload: SessionPayload): string {
-  const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const sig = createHmac("sha256", SECRET).update(data).digest("base64url");
-  return `${data}.${sig}`;
+function getSecret(): Uint8Array {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET environment variable is not set");
+  return new TextEncoder().encode(secret);
 }
 
-function verify(token: string): SessionPayload | null {
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+
   try {
-    const dot = token.lastIndexOf(".");
-    if (dot === -1) return null;
-    const data = token.slice(0, dot);
-    const sig = token.slice(dot + 1);
-    const expected = createHmac("sha256", SECRET).update(data).digest("base64url");
-    const a = Buffer.from(sig, "base64url");
-    const b = Buffer.from(expected, "base64url");
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-    return JSON.parse(Buffer.from(data, "base64url").toString("utf8")) as SessionPayload;
-  } catch {
+    const secret = getSecret();
+    const { payload } = await jwtVerify(token, secret);
+
+    const userId = (payload.id || payload.userId) as string;
+    if (!userId) return null;
+
+    const user = await db.user.findUnique({
+      where: { id: userId, isDeleted: false },
+      select: { id: true, name: true, email: true, role: true, phoneNumber: true, address: true },
+    });
+
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phoneNumber: user.phoneNumber,
+      address: user.address,
+    };
+  } catch (error: any) {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
     return null;
   }
 }
 
-export async function getSession(): Promise<SessionPayload | null> {
-  const store = await cookies();
-  const token = store.get("session")?.value;
-  if (!token) return null;
-  return verify(token);
-}
-
-export async function setSession(payload: SessionPayload): Promise<void> {
-  const store = await cookies();
-  store.set("session", sign(payload), {
+export async function setAuthCookie(userId: string, role: string): Promise<void> {
+  const secret = getSecret();
+  const token = await new SignJWT({ id: userId, role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(secret);
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 days
   });
 }
 
-export async function clearSession(): Promise<void> {
-  const store = await cookies();
-  store.delete("session");
+export async function clearAuthCookie(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_NAME);
+}
+
+// Legacy alias used by checkout flow
+export async function getSession(): Promise<{ userId: string; email: string; name: string } | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  return { userId: user.id, email: user.email, name: user.name };
 }

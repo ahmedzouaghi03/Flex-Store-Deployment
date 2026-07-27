@@ -2,6 +2,8 @@
   "Nav": {
     "Home": "Accueil",
     "Shop": "Boutique",
+    "About": "À Propos",
+    "Contact": "Contact",
     "Cart": "Panier",
     "SignIn": "Connexion"
   },
@@ -29,6 +31,9 @@
     "City": "Ville",
     "PlaceOrder": "Passer la commande",
     "OrderSummary": "Récapitulatif",
+    "Subtotal": "Sous-total",
+    "Shipping": "Livraison",
+    "Free": "Gratuite",
     "Total": "Total",
     "Size": "Taille",
     "ErrorNameRequired": "Veuillez saisir votre nom complet.",

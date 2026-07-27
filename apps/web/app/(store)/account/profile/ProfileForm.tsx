@@ -23,7 +23,7 @@ export function ProfileForm({ initialName, email, initialPhone }: Props) {
     e.preventDefault();
     setError("");
     startTransition(async () => {
-      const result = await updateProfile({ name, phone });
+      const result = await updateProfile({ name, phoneNumber: phone });
       if (!result.success) {
         setError(result.error ?? "Something went wrong.");
         return;

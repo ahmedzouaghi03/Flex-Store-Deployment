@@ -14,7 +14,7 @@ export default async function ProfilePage() {
 
   const user = await db.user.findUnique({
     where: { id: session.userId },
-    select: { name: true, email: true, phone: true, createdAt: true },
+    select: { name: true, email: true, phoneNumber: true, createdAt: true },
   });
 
   if (!user) redirect("/account/login");
@@ -45,7 +45,7 @@ export default async function ProfilePage() {
       <ProfileForm
         initialName={user.name}
         email={user.email}
-        initialPhone={user.phone ?? ""}
+        initialPhone={user.phoneNumber ?? ""}
       />
     </main>
   );

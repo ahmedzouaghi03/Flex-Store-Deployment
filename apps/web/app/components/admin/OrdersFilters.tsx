@@ -11,6 +11,7 @@ const STATUSES = [
   { value: "SHIPPED", label: "Shipped" },
   { value: "DELIVERED", label: "Delivered" },
   { value: "CANCELLED", label: "Cancelled" },
+  { value: "RETURNED", label: "Returned" },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -20,6 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
   SHIPPED: "bg-indigo-100 text-indigo-800",
   DELIVERED: "bg-emerald-100 text-emerald-800",
   CANCELLED: "bg-red-100 text-red-800",
+  RETURNED: "bg-orange-100 text-orange-800",
 };
 
 export function OrdersFilters() {

@@ -1,13 +1,23 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2, Link as LinkIcon, Upload } from "lucide-react";
+import { Plus, X, Loader2, Link as LinkIcon, Upload, Copy, Images } from "lucide-react";
 
 import { createProduct, updateProduct } from "@/actions/adminActions";
-import type { AdminProductDetail, SizeStock } from "@/types";
+import { ImagePickerModal } from "./ImagePickerModal";
+import type { AdminProductDetail } from "@/types";
 
-type ColorRow = { id: string; name: string; hex: string; imageUrls: string[]; urlInput: string };
+type SizeEntry = { size: string; stock: number };
+type ColorRow = {
+  id: string;
+  name: string;
+  hex: string;
+  imageUrls: string[];
+  urlInput: string;
+  sizes: SizeEntry[];
+  sizeInput: string;
+};
 
 async function uploadToImgbb(file: File): Promise<string> {
   const fd = new FormData();
@@ -20,54 +30,48 @@ async function uploadToImgbb(file: File): Promise<string> {
 
 function uid() { return Math.random().toString(36).slice(2); }
 
-// ── Color name → hex lookup (French + English shoe colors) ─────────────────
+// ── Color name → hex ──────────────────────────────────────────────────────────
 const COLOR_NAMES: [string[], string][] = [
   [["noir", "black", "noire"], "#1a1a1a"],
   [["blanc", "white", "blanche"], "#f5f5f5"],
-  [["blanc cassé", "off white", "ivoire", "ivory", "crème", "creme", "cream"], "#f5f0e8"],
+  [["blanc cassé", "off white", "ivoire", "ivory", "crème", "cream"], "#f5f0e8"],
   [["gris", "grey", "gray", "grise"], "#808080"],
   [["gris clair", "light grey", "light gray"], "#c0c0c0"],
   [["gris foncé", "dark grey", "dark gray", "anthracite"], "#404040"],
   [["rouge", "red"], "#cc2020"],
-  [["bordeaux", "burgundy", "wine", "vin", "dark red"], "#722f37"],
+  [["bordeaux", "burgundy", "wine", "vin"], "#722f37"],
   [["rose", "pink"], "#e87090"],
-  [["rose poudré", "dusty pink", "rose pâle", "vieux rose", "blush"], "#d4a0a8"],
+  [["rose poudré", "dusty pink", "blush"], "#d4a0a8"],
   [["fuchsia", "magenta"], "#cc2080"],
   [["corail", "coral"], "#ff6b5b"],
   [["orange"], "#e06820"],
-  [["pêche", "peche", "peach", "saumon", "salmon"], "#ffad8a"],
+  [["pêche", "peach", "saumon", "salmon"], "#ffad8a"],
   [["jaune", "yellow"], "#e0c020"],
-  [["moutarde", "mustard", "jaune moutarde"], "#c8a020"],
-  [["doré", "dore", "gold", "golden"], "#d4a017"],
+  [["moutarde", "mustard"], "#c8a020"],
+  [["doré", "dore", "gold"], "#d4a017"],
   [["vert", "green"], "#2e8b57"],
-  [["vert olive", "olive green", "olive"], "#6b7c2a"],
-  [["kaki", "khaki", "kakis"], "#8b8040"],
-  [["vert kaki", "army green", "militaire"], "#606030"],
-  [["vert sauge", "sage", "sage green"], "#8fad8a"],
+  [["olive", "kaki", "khaki"], "#6b7c2a"],
+  [["vert sauge", "sage"], "#8fad8a"],
   [["vert forêt", "forest green"], "#228b22"],
-  [["vert menthe", "mint", "menthe"], "#98d4c0"],
-  [["turquoise", "turquoise green"], "#40e0d0"],
+  [["turquoise"], "#40e0d0"],
   [["bleu", "blue"], "#3070c0"],
-  [["bleu marine", "navy", "marine", "navy blue", "bleu nuit"], "#1a2a5e"],
-  [["bleu ciel", "sky blue", "bleu clair", "light blue"], "#87ceeb"],
-  [["bleu cobalt", "cobalt", "cobalt blue"], "#0047ab"],
-  [["bleu royal", "royal blue"], "#2040c0"],
-  [["bleu canard", "teal", "canard"], "#006080"],
+  [["bleu marine", "navy"], "#1a2a5e"],
+  [["bleu ciel", "sky blue"], "#87ceeb"],
+  [["bleu cobalt", "cobalt"], "#0047ab"],
+  [["bleu canard", "teal"], "#006080"],
   [["violet", "purple"], "#6030a0"],
   [["lilas", "lilac", "lavande", "lavender"], "#b898e8"],
   [["prune", "plum"], "#8e4585"],
   [["marron", "brown", "brun"], "#7b4a28"],
-  [["caramel", "caramel brown"], "#c68642"],
-  [["camel", "camel brown", "chameau"], "#c19a6b"],
-  [["noisette", "hazelnut"], "#9b6a3a"],
+  [["caramel"], "#c68642"],
+  [["camel"], "#c19a6b"],
   [["chocolat", "chocolate"], "#4a2c17"],
-  [["cognac", "cognac brown", "rouille"], "#9a4f1e"],
+  [["cognac"], "#9a4f1e"],
   [["taupe"], "#8a7868"],
   [["beige"], "#d4bfa0"],
-  [["nude", "skin", "peau"], "#e8c9a0"],
+  [["nude", "skin"], "#e8c9a0"],
   [["sable", "sand"], "#c8b080"],
-  [["naturel", "natural", "lin", "linen"], "#e0d0b8"],
-  [["argent", "silver", "argenté"], "#c0c0c0"],
+  [["argent", "silver"], "#c0c0c0"],
   [["bronze"], "#cd7f32"],
 ];
 
@@ -80,61 +84,207 @@ function nameToHex(name: string): string | null {
   return null;
 }
 
+const inp = "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-bold text-[var(--color-text)]">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+// ── Per-color sizes+stock editor ──────────────────────────────────────────────
+function SizesEditor({
+  sizes,
+  sizeInput,
+  onSizeInputChange,
+  onAddSize,
+  onStockChange,
+  onRemoveSize,
+}: {
+  sizes: SizeEntry[];
+  sizeInput: string;
+  onSizeInputChange: (v: string) => void;
+  onAddSize: () => void;
+  onStockChange: (size: string, stock: number) => void;
+  onRemoveSize: (size: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">
+        Sizes &amp; Stock
+      </p>
+
+      {sizes.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {sizes.map((ss) => (
+            <div
+              key={ss.size}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 ${
+                ss.stock === 0
+                  ? "border-red-200 bg-red-50"
+                  : "border-[var(--color-border)] bg-[var(--color-bg)]"
+              }`}
+            >
+              <span className={`text-sm font-semibold ${ss.stock === 0 ? "text-red-500" : "text-[var(--color-text)]"}`}>
+                {ss.size}
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={ss.stock}
+                onChange={(e) => onStockChange(ss.size, Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-16 rounded-lg border border-[var(--color-border)] bg-white px-2 py-0.5 text-center text-xs font-medium outline-none focus:border-[var(--color-accent)]"
+              />
+              <button
+                type="button"
+                onClick={() => onRemoveSize(ss.size)}
+                className="text-[var(--color-muted)] hover:text-red-500 transition"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <input
+          value={sizeInput}
+          onChange={(e) => onSizeInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              onAddSize();
+            }
+          }}
+          placeholder="Size (e.g. 39, 40, 41…) then Enter"
+          className={`${inp} min-w-0 py-2 text-xs flex-1`}
+        />
+        <button
+          type="button"
+          onClick={onAddSize}
+          disabled={!sizeInput.trim()}
+          className="shrink-0 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+        >
+          Add
+        </button>
+      </div>
+      {sizes.length === 0 && (
+        <p className="text-xs text-amber-600">⚠ Add at least one size with stock to make this color available.</p>
+      )}
+    </div>
+  );
+}
+
+// ── Main form ─────────────────────────────────────────────────────────────────
 export function ProductForm({ initialData }: { initialData?: AdminProductDetail }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
-  const [name, setName]           = useState(initialData?.name ?? "");
-  const [price, setPrice]         = useState(initialData ? String(initialData.priceCents / 100) : "");
-  const [images, setImages]       = useState<string[]>(initialData?.images ?? []);
-  const [imgUrlInput, setImgUrlInput] = useState("");
-
-  const [sizeStocks, setSizeStocks] = useState<SizeStock[]>(initialData?.sizeStocks ?? []);
-  const [sizeInput, setSizeInput]   = useState("");
-
-  const [colorRows, setColorRows] = useState<ColorRow[]>(
-    initialData?.colorImages.map((c) => ({
-      id: uid(), name: c.name, hex: c.hex ?? "#888888", imageUrls: c.imageUrls, urlInput: "",
-    })) ?? [],
-  );
-
+  const [name, setName]     = useState(initialData?.name ?? "");
+  const [price, setPrice]   = useState(initialData ? String(initialData.priceCents / 100) : "");
   const [isPublished, setIsPublished] = useState(initialData?.isPublished ?? true);
   const [isFeatured, setIsFeatured]   = useState(initialData?.isFeatured ?? false);
   const [submitting, setSubmitting]   = useState(false);
   const [uploading, setUploading]     = useState(false);
   const [error, setError]             = useState("");
 
-  const mainFileRef  = useRef<HTMLInputElement>(null);
-  const colorFileRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+  // ── Main product photos ─────────────────────────────────────────────────
+  const [mainImages, setMainImages] = useState<string[]>(initialData?.images ?? []);
+  const [mainUrlInput, setMainUrlInput] = useState("");
+  const mainFileRef = useRef<HTMLInputElement>(null);
 
-  // ── Image URL helpers ───────────────────────────────────────────────────
-
-  function addImageUrl() {
-    const url = imgUrlInput.trim();
-    if (url && !images.includes(url)) setImages((prev) => [...prev, url]);
-    setImgUrlInput("");
+  function addMainUrl() {
+    const url = mainUrlInput.trim();
+    if (!url || mainImages.includes(url)) { setMainUrlInput(""); return; }
+    setMainImages((prev) => [...prev, url]);
+    setMainUrlInput("");
   }
 
-  function removeImage(index: number) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  // ── File upload helpers ─────────────────────────────────────────────────
-
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
+  async function handleMainFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
     setUploading(true);
     setError("");
     try {
-      const urls = await Promise.all(files.map(uploadToImgbb));
-      setImages((prev) => [...prev, ...urls]);
+      const url = await uploadToImgbb(file);
+      setMainImages((prev) => [...prev, url]);
     } catch {
-      setError("Image upload failed. Check your IMGBB_API_KEY in .env.local");
+      setError("Image upload failed. Check IMGBB_API_KEY in .env.local");
     } finally {
       setUploading(false);
       e.target.value = "";
     }
+  }
+
+  const [colorRows, setColorRows] = useState<ColorRow[]>(
+    initialData?.colorImages.map((c) => ({
+      id: uid(),
+      name: c.name,
+      hex: c.hex ?? "#888888",
+      imageUrls: c.imageUrls,
+      urlInput: "",
+      sizes: c.sizes ?? [],
+      sizeInput: "",
+    })) ?? [],
+  );
+
+  const colorFileRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+
+  // ── Reuse-existing-image picker ──────────────────────────────────────────
+  // "main" targets the main product photos list; any other value is a color row id.
+  const [pickerTarget, setPickerTarget] = useState<"main" | string | null>(null);
+
+  const allUploadedImages = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const url of [...mainImages, ...colorRows.flatMap((r) => r.imageUrls)]) {
+      if (!seen.has(url)) {
+        seen.add(url);
+        out.push(url);
+      }
+    }
+    return out;
+  }, [mainImages, colorRows]);
+
+  const pickerAlreadySelected =
+    pickerTarget === "main"
+      ? mainImages
+      : (colorRows.find((r) => r.id === pickerTarget)?.imageUrls ?? []);
+
+  function handlePickerConfirm(urls: string[]) {
+    if (pickerTarget === "main") {
+      setMainImages((prev) => [...prev, ...urls.filter((u) => !prev.includes(u))]);
+    } else if (pickerTarget) {
+      const targetId = pickerTarget;
+      setColorRows((prev) =>
+        prev.map((r) =>
+          r.id === targetId
+            ? { ...r, imageUrls: [...r.imageUrls, ...urls.filter((u) => !r.imageUrls.includes(u))] }
+            : r,
+        ),
+      );
+    }
+  }
+
+  // ── Color helpers ────────────────────────────────────────────────────────
+  function updateColor(rowId: string, patch: Partial<ColorRow>) {
+    setColorRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, ...patch } : r)));
+  }
+
+  function addColorUrl(rowId: string) {
+    setColorRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== rowId) return r;
+        const url = r.urlInput.trim();
+        if (!url || r.imageUrls.includes(url)) return { ...r, urlInput: "" };
+        return { ...r, imageUrls: [...r.imageUrls, url], urlInput: "" };
+      }),
+    );
   }
 
   async function handleColorFileUpload(rowId: string, e: React.ChangeEvent<HTMLInputElement>) {
@@ -144,42 +294,63 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
     setError("");
     try {
       const url = await uploadToImgbb(file);
-      setColorRows((prev) => prev.map((r) =>
-        r.id === rowId ? { ...r, imageUrls: [...r.imageUrls, url] } : r,
-      ));
+      setColorRows((prev) =>
+        prev.map((r) => (r.id === rowId ? { ...r, imageUrls: [...r.imageUrls, url] } : r)),
+      );
     } catch {
-      setError("Image upload failed. Check your IMGBB_API_KEY in .env.local");
+      setError("Image upload failed. Check IMGBB_API_KEY in .env.local");
     } finally {
       setUploading(false);
       e.target.value = "";
     }
   }
 
-  // ── Size helpers ────────────────────────────────────────────────────────
-
-  function addSize() {
-    const s = sizeInput.trim();
-    if (s && !sizeStocks.some((x) => x.size === s))
-      setSizeStocks((prev) => [...prev, { size: s, stock: 99 }]);
-    setSizeInput("");
+  // ── Size helpers (per color) ─────────────────────────────────────────────
+  function addSizeToColor(rowId: string) {
+    setColorRows((prev) =>
+      prev.map((r) => {
+        if (r.id !== rowId) return r;
+        const s = r.sizeInput.trim();
+        if (!s || r.sizes.some((x) => x.size === s)) return { ...r, sizeInput: "" };
+        return { ...r, sizes: [...r.sizes, { size: s, stock: 10 }], sizeInput: "" };
+      }),
+    );
   }
 
-  // ── Color URL helpers ───────────────────────────────────────────────────
-
-  function addColorUrl(rowId: string) {
-    setColorRows((prev) => prev.map((r) => {
-      if (r.id !== rowId) return r;
-      const url = r.urlInput.trim();
-      if (!url || r.imageUrls.includes(url)) return { ...r, urlInput: "" };
-      return { ...r, imageUrls: [...r.imageUrls, url], urlInput: "" };
-    }));
+  function updateSizeStock(rowId: string, size: string, stock: number) {
+    setColorRows((prev) =>
+      prev.map((r) =>
+        r.id === rowId
+          ? { ...r, sizes: r.sizes.map((s) => (s.size === size ? { ...s, stock } : s)) }
+          : r,
+      ),
+    );
   }
 
-  // ── Submit ──────────────────────────────────────────────────────────────
+  function removeSizeFromColor(rowId: string, size: string) {
+    setColorRows((prev) =>
+      prev.map((r) =>
+        r.id === rowId ? { ...r, sizes: r.sizes.filter((s) => s.size !== size) } : r,
+      ),
+    );
+  }
 
+  function copySizesFromFirst(targetId: string) {
+    const first = colorRows.find((r) => r.id !== targetId);
+    if (!first) return;
+    setColorRows((prev) =>
+      prev.map((r) =>
+        r.id === targetId ? { ...r, sizes: first.sizes.map((s) => ({ ...s })) } : r,
+      ),
+    );
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) { setError("Shoe name is required."); return; }
+    if (colorRows.length === 0) { setError("Add at least one color."); return; }
+
     const priceNum = price.trim() === "" ? 0 : parseFloat(price);
     if (isNaN(priceNum) || priceNum < 0) { setError("Enter a valid price."); return; }
 
@@ -189,9 +360,13 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
     const input = {
       name: name.trim(),
       priceCents: Math.round(priceNum * 100),
-      images,
-      sizeStocks,
-      colorImages: colorRows.map(({ name, hex, imageUrls }) => ({ name, hex, imageUrls })),
+      images: mainImages,
+      colorImages: colorRows.map(({ name, hex, imageUrls, sizes }) => ({
+        name,
+        hex,
+        imageUrls,
+        sizes,
+      })),
       isPublished,
       isFeatured,
     };
@@ -204,11 +379,15 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
         if (!result.success) { setError(result.error ?? "Something went wrong."); setSubmitting(false); return; }
         router.push("/admin/products");
         router.refresh();
-      } catch { setError("Something went wrong."); setSubmitting(false); }
+      } catch {
+        setError("Something went wrong.");
+        setSubmitting(false);
+      }
     });
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -220,80 +399,89 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
       </Field>
 
       {/* Price */}
-      <Field label="Price (DT)">
-        <input type="number" min="0" step="1" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="4500 (leave empty for TBD)" className={inp} />
+      <Field label="Base Price (DT)">
+        <input type="number" min="0" step="0.001" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 89.900" className={inp} />
       </Field>
 
-      {/* ── Photos via URL ── */}
-      <div className="space-y-3">
-        <p className="text-sm font-bold text-[var(--color-text)]">Product Photos</p>
-        <p className="text-xs text-[var(--color-muted)]">
-          Paste a direct image URL and click Add. First photo is the main photo.
-        </p>
+      {/* Main Product Photos */}
+      <div className="rounded-2xl border border-[var(--color-border)] bg-white p-5 space-y-3">
+        <div>
+          <p className="text-sm font-bold text-[var(--color-text)]">Main Product Photos</p>
+          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+            Shown on product cards and as the default gallery before a color is selected. Add multiple photos.
+          </p>
+        </div>
 
-        {/* URL input row */}
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+          <div className="relative min-w-0 flex-1">
+            <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted)]" />
             <input
-              value={imgUrlInput}
-              onChange={(e) => setImgUrlInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImageUrl(); } }}
-              placeholder="https://example.com/shoe.jpg"
-              className={`${inp} pl-9`}
+              value={mainUrlInput}
+              onChange={(e) => setMainUrlInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addMainUrl(); } }}
+              placeholder="Paste image URL…"
+              className={`${inp} py-2 pl-8 text-xs`}
             />
           </div>
           <button
             type="button"
-            onClick={addImageUrl}
-            disabled={!imgUrlInput.trim() || uploading}
-            className="shrink-0 rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+            onClick={addMainUrl}
+            disabled={!mainUrlInput.trim() || uploading}
+            className="shrink-0 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
           >
             Add
           </button>
-          {/* File-picker → imgbb upload */}
           <input
-            ref={mainFileRef}
             type="file"
             accept="image/*"
-            multiple
             className="hidden"
-            onChange={handleFileUpload}
+            ref={mainFileRef}
+            onChange={handleMainFileUpload}
           />
           <button
             type="button"
             disabled={uploading}
             onClick={() => mainFileRef.current?.click()}
-            title="Upload from computer"
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+            title="Upload from device"
+            className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
           >
-            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            <span className="hidden sm:inline">Upload</span>
+            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            type="button"
+            disabled={uploading || allUploadedImages.length === 0}
+            onClick={() => setPickerTarget("main")}
+            title="Choose from already uploaded images"
+            className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+          >
+            <Images className="h-3.5 w-3.5" />
           </button>
         </div>
 
-        {/* Thumbnails */}
-        {images.length > 0 && (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-            {images.map((url, i) => (
-              <div key={i} className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--color-border)]">
+        {mainImages.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {mainImages.map((url, pi) => (
+              <div key={pi} className="group relative h-16 w-16 overflow-hidden rounded-xl border border-[var(--color-border)]">
                 <img
                   src={url}
                   alt=""
                   className="h-full w-full object-cover"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23e5e7eb'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%239ca3af' font-size='12'%3EError%3C/text%3E%3C/svg%3E"; }}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23e5e7eb'/%3E%3C/svg%3E";
+                  }}
                 />
-                {i === 0 && (
-                  <span className="absolute left-1.5 top-1.5 rounded-full bg-[var(--color-accent)] px-1.5 py-0.5 text-[9px] font-bold text-white">
-                    Main
+                {pi === 0 && (
+                  <span className="absolute left-1 top-1 rounded bg-[var(--color-accent)] px-1 text-[8px] font-bold text-white">
+                    Card
                   </span>
                 )}
                 <button
                   type="button"
-                  onClick={() => removeImage(i)}
-                  className="absolute right-1.5 top-1.5 hidden rounded-full bg-red-600 p-0.5 text-white group-hover:flex"
+                  onClick={() => setMainImages((prev) => prev.filter((_, i) => i !== pi))}
+                  className="absolute right-0.5 top-0.5 hidden rounded-full bg-red-600 p-0.5 text-white group-hover:flex"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </div>
             ))}
@@ -301,82 +489,25 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
         )}
       </div>
 
-      {/* Sizes + Stock */}
-      <div className="space-y-2">
-        <p className="text-sm font-bold text-[var(--color-text)]">Sizes &amp; Stock</p>
-        <p className="text-xs text-[var(--color-muted)]">Stock 0 = sold out (shown in red to customers)</p>
-        {sizeStocks.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {sizeStocks.map((ss) => (
-              <div
-                key={ss.size}
-                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 ${
-                  ss.stock === 0
-                    ? "border-red-200 bg-red-50"
-                    : "border-[var(--color-border)] bg-white"
-                }`}
-              >
-                <span className={`text-sm font-semibold ${ss.stock === 0 ? "text-red-500" : "text-[var(--color-text)]"}`}>
-                  {ss.size}
-                </span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={ss.stock}
-                  onChange={(e) =>
-                    setSizeStocks((prev) =>
-                      prev.map((x) =>
-                        x.size === ss.size
-                          ? { ...x, stock: Math.max(0, parseInt(e.target.value) || 0) }
-                          : x,
-                      ),
-                    )
-                  }
-                  className="w-16 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-0.5 text-center text-xs font-medium outline-none focus:border-[var(--color-accent)]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setSizeStocks((prev) => prev.filter((x) => x.size !== ss.size))}
-                  className="text-[var(--color-muted)] hover:text-red-500"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex gap-2">
-          <input
-            value={sizeInput}
-            onChange={(e) => setSizeInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addSize(); } }}
-            placeholder="Type a size and press Enter (e.g. 42, XL)"
-            className={`${inp} flex-1`}
-          />
-          <button type="button" onClick={addSize} className="shrink-0 rounded-xl border border-[var(--color-border)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg)] transition">
-            Add
-          </button>
-        </div>
-      </div>
-
-      {/* Colors with URL photos */}
+      {/* Colors */}
       <div className="space-y-3">
-        <p className="text-sm font-bold text-[var(--color-text)]">Colors &amp; Photos</p>
-        <p className="text-xs text-[var(--color-muted)]">
-          Each color can have multiple photo URLs. Paste a link and click Add.
-        </p>
+        <div>
+          <p className="text-sm font-bold text-[var(--color-text)]">Colors, Photos &amp; Sizes</p>
+          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+            Each color has its own photos and size/stock table. Stock 0 = sold out.
+          </p>
+        </div>
 
-        {colorRows.map((row) => (
-          <div key={row.id} className="rounded-2xl border border-[var(--color-border)] bg-white p-4 space-y-3">
-            {/* Color picker + name */}
+        {colorRows.map((row, rowIndex) => (
+          <div key={row.id} className="rounded-2xl border border-[var(--color-border)] bg-white p-5 space-y-4">
+            {/* Color name + hex */}
             <div className="flex items-center gap-3">
               <label className="relative h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-[var(--color-border)] shadow-sm hover:border-[var(--color-accent)] transition">
                 <div className="h-full w-full" style={{ backgroundColor: row.hex }} />
                 <input
                   type="color"
                   value={row.hex}
-                  onChange={(e) => setColorRows((prev) => prev.map((r) => r.id === row.id ? { ...r, hex: e.target.value } : r))}
+                  onChange={(e) => updateColor(row.id, { hex: e.target.value })}
                   className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 />
               </label>
@@ -385,14 +516,10 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
                 onChange={(e) => {
                   const n = e.target.value;
                   const detectedHex = nameToHex(n);
-                  setColorRows((prev) => prev.map((r) =>
-                    r.id === row.id
-                      ? { ...r, name: n, ...(detectedHex ? { hex: detectedHex } : {}) }
-                      : r,
-                  ));
+                  updateColor(row.id, { name: n, ...(detectedHex ? { hex: detectedHex } : {}) });
                 }}
-                placeholder="e.g. Noir, Bordeaux, Camel…"
-                className={`${inp} flex-1`}
+                placeholder="Color name (e.g. Noir, Camel, Bordeaux…)"
+                className={`${inp} min-w-0 flex-1`}
               />
               <button
                 type="button"
@@ -403,77 +530,107 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
               </button>
             </div>
 
-            {/* Color URL input */}
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted)]" />
+            {/* Photos */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">Photos</p>
+              <div className="flex gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted)]" />
+                  <input
+                    value={row.urlInput}
+                    onChange={(e) => updateColor(row.id, { urlInput: e.target.value })}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColorUrl(row.id); } }}
+                    placeholder="Paste image URL…"
+                    className={`${inp} py-2 pl-8 text-xs`}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => addColorUrl(row.id)}
+                  disabled={!row.urlInput.trim() || uploading}
+                  className="shrink-0 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+                >
+                  Add
+                </button>
                 <input
-                  value={row.urlInput}
-                  onChange={(e) => setColorRows((prev) => prev.map((r) => r.id === row.id ? { ...r, urlInput: e.target.value } : r))}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addColorUrl(row.id); } }}
-                  placeholder="https://example.com/photo.jpg"
-                  className={`${inp} py-2 pl-8 text-xs`}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={(el) => { if (el) colorFileRefs.current.set(row.id, el); }}
+                  onChange={(e) => handleColorFileUpload(row.id, e)}
                 />
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => colorFileRefs.current.get(row.id)?.click()}
+                  title="Upload from device"
+                  className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+                >
+                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  disabled={uploading || allUploadedImages.length === 0}
+                  onClick={() => setPickerTarget(row.id)}
+                  title="Choose from already uploaded images"
+                  className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+                >
+                  <Images className="h-3.5 w-3.5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => addColorUrl(row.id)}
-                disabled={!row.urlInput.trim() || uploading}
-                className="shrink-0 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg)] transition disabled:opacity-40"
-              >
-                Add
-              </button>
-              {/* File-picker → imgbb upload */}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                ref={(el) => { if (el) colorFileRefs.current.set(row.id, el); }}
-                onChange={(e) => handleColorFileUpload(row.id, e)}
-              />
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => colorFileRefs.current.get(row.id)?.click()}
-                title="Upload from computer"
-                className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg)] transition disabled:opacity-40"
-              >
-                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-              </button>
+              {row.imageUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {row.imageUrls.map((url, pi) => (
+                    <div key={pi} className="group relative h-16 w-16 overflow-hidden rounded-xl border border-[var(--color-border)]">
+                      <img src={url} alt="" className="h-full w-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23e5e7eb'/%3E%3C/svg%3E"; }}
+                      />
+                      {pi === 0 && (
+                        <span className="absolute left-1 top-1 rounded bg-[var(--color-accent)] px-1 text-[8px] font-bold text-white">Main</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => updateColor(row.id, { imageUrls: row.imageUrls.filter((_, i) => i !== pi) })}
+                        className="absolute right-0.5 top-0.5 hidden rounded-full bg-red-600 p-0.5 text-white group-hover:flex"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Color photo thumbnails */}
-            {row.imageUrls.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {row.imageUrls.map((url, pi) => (
-                  <div key={pi} className="group relative h-16 w-16 overflow-hidden rounded-xl border border-[var(--color-border)]">
-                    <img
-                      src={url}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23e5e7eb'/%3E%3Ctext x='32' y='36' text-anchor='middle' fill='%239ca3af' font-size='9'%3EErr%3C/text%3E%3C/svg%3E"; }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setColorRows((prev) => prev.map((r) =>
-                        r.id === row.id
-                          ? { ...r, imageUrls: r.imageUrls.filter((_, i) => i !== pi) }
-                          : r,
-                      ))}
-                      className="absolute right-0.5 top-0.5 hidden rounded-full bg-red-600 p-0.5 text-white group-hover:flex"
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Divider */}
+            <div className="border-t border-[var(--color-border)]" />
+
+            {/* Sizes + stock for this color */}
+            <div className="space-y-2">
+              {rowIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={() => copySizesFromFirst(row.id)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-text)] transition"
+                >
+                  <Copy className="h-3 w-3" />
+                  Copy sizes from first color
+                </button>
+              )}
+              <SizesEditor
+                sizes={row.sizes}
+                sizeInput={row.sizeInput}
+                onSizeInputChange={(v) => updateColor(row.id, { sizeInput: v })}
+                onAddSize={() => addSizeToColor(row.id)}
+                onStockChange={(size, stock) => updateSizeStock(row.id, size, stock)}
+                onRemoveSize={(size) => removeSizeFromColor(row.id, size)}
+              />
+            </div>
           </div>
         ))}
 
         <button
           type="button"
-          onClick={() => setColorRows((prev) => [...prev, { id: uid(), name: "", hex: "#888888", imageUrls: [], urlInput: "" }])}
+          onClick={() => setColorRows((prev) => [...prev, { id: uid(), name: "", hex: "#888888", imageUrls: [], urlInput: "", sizes: [], sizeInput: "" }])}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm font-medium text-[var(--color-muted)] transition hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
         >
           <Plus className="h-4 w-4" /> Add Color
@@ -493,10 +650,10 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
       </div>
 
       {/* Submit */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || uploading}
           className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)] disabled:opacity-60 active:scale-95"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -507,16 +664,15 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
         </a>
       </div>
     </form>
+
+    {pickerTarget !== null && (
+      <ImagePickerModal
+        images={allUploadedImages}
+        alreadySelected={pickerAlreadySelected}
+        onConfirm={handlePickerConfirm}
+        onClose={() => setPickerTarget(null)}
+      />
+    )}
+    </>
   );
 }
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-bold text-[var(--color-text)]">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-const inp = "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition";

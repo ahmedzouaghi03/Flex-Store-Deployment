@@ -23,7 +23,7 @@ export default async function AccountPage() {
           <h1 className="text-2xl font-bold text-[var(--color-text)]">{t("Title")}</h1>
           <p className="text-[var(--color-muted)]">{t("Subtitle")}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Link
             href="/account/login"
             className="flex flex-col items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-white p-6 transition hover:border-[var(--color-accent)]/40 hover:bg-[var(--color-accent)]/5"
@@ -54,7 +54,7 @@ export default async function AccountPage() {
   }
 
   const orders = await db.order.findMany({
-    where: { email: session.email },
+    where: { userId: session.userId },
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { items: true } } },
   });
@@ -108,10 +108,10 @@ export default async function AccountPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <p className="font-mono text-xs font-bold text-[var(--color-muted)]">
-                      #{order.id.slice(0, 8).toUpperCase()}
+                      {order.orderNumber}
                     </p>
                     <p className="text-sm text-[var(--color-muted)]">
-                      {new Date(order.createdAt).toLocaleDateString("fr-DZ", {
+                      {new Date(order.createdAt).toLocaleDateString("fr-TN", {
                         day: "2-digit",
                         month: "long",
                         year: "numeric",
@@ -122,7 +122,7 @@ export default async function AccountPage() {
                     </p>
                   </div>
                   <div className="text-right space-y-2">
-                    <p className="font-bold text-[var(--color-text)]">{formatPrice(order.totalCents)}</p>
+                    <p className="font-bold text-[var(--color-text)]">{formatPrice(Number(order.total))}</p>
                     <OrderStatusBadge status={order.status} />
                   </div>
                 </div>

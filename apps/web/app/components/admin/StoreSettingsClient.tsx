@@ -7,10 +7,20 @@ import { resetToDefault } from "@/actions/storeConfigActions";
 import { HeroTextEditor } from "./HeroTextEditor";
 import { VideoTextEditor, FooterCtaEditor } from "./VideoTextEditor";
 import { ColorEditor } from "./ColorEditor";
-import { HeroPhotoUpload } from "./HeroPhotoUpload";
+import { DeliveryFeeEditor, DeliveryFeeMiniPreview } from "./DeliveryFeeEditor";
+import { ContactInfoEditor, ContactInfoMiniPreview } from "./ContactInfoEditor";
+import { HeroPhotoUpload, type HeroOverlayCard } from "./HeroPhotoUpload";
 import { VideoUpload } from "./VideoUpload";
 import { LogoUpload } from "./LogoUpload";
 import { StorePreview } from "./StorePreview";
+import type { ContactInfo } from "@/types";
+
+type StoreMedia = {
+  logoUrl: string | null;
+  heroImage: string | null;
+  videoUrl: string | null;
+  overlayCard: HeroOverlayCard;
+};
 
 // ── Reset bar ──────────────────────────────────────────────────────────────
 
@@ -82,13 +92,13 @@ function EditRow({
 function HeroMiniPreview({
   hero,
   colors,
-  heroVersion = 0,
+  heroImageUrl,
   photoCard,
 }: {
   hero: StoreConfig["hero"];
   colors: StoreColors;
-  heroVersion?: number;
-  photoCard?: StoreConfig["photoCard"];
+  heroImageUrl?: string | null;
+  photoCard?: HeroOverlayCard;
 }) {
   const vars = {
     "--p-dark": colors["green-dark"],
@@ -139,20 +149,22 @@ function HeroMiniPreview({
             </span>
           </div>
         </div>
-        {/* photo slot — key+src use heroVersion to reload after upload */}
+        {/* photo slot — keyed by URL so it reloads after upload */}
         <div
           className="relative shrink-0 overflow-hidden rounded-xl border border-white/15"
           style={{ width: 64, aspectRatio: "4/5" }}
         >
-          <img
-            key={heroVersion}
-            src={heroVersion > 0 ? `/hero-photo.jpg?v=${heroVersion}` : "/hero-photo.jpg"}
-            alt=""
-            className="h-full w-full object-cover"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.opacity = "0";
-            }}
-          />
+          {heroImageUrl && (
+            <img
+              key={heroImageUrl}
+              src={heroImageUrl}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.opacity = "0";
+              }}
+            />
+          )}
           {photoCard && (
             <div className="absolute bottom-1 left-1 rounded-md border border-white/20 bg-black/40 px-1.5 py-1 backdrop-blur-sm">
               <p className="text-white/60 leading-none" style={{ fontSize: 5 }}>{photoCard.label}</p>
@@ -254,28 +266,20 @@ function ColorMiniPreview({ colors }: { colors: StoreColors }) {
   );
 }
 
-function LogoMiniPreview({ version }: { version: number }) {
-  const src = version > 0 ? `/store-logo.png?v=${version}` : "/store-logo.png";
+function LogoMiniPreview({ url }: { url: string | null }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-sm">
       <div className="border-b border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2">
         <p className="text-xs font-semibold text-[var(--color-muted)]">Navbar preview</p>
       </div>
       <div className="flex items-center justify-between px-4 py-3">
-        <img
-          key={version}
-          src={src}
-          alt="Logo"
-          className="h-8 object-contain"
-          onError={(e) => {
-            const el = e.currentTarget as HTMLImageElement;
-            el.style.display = "none";
-            (el.nextElementSibling as HTMLElement | null)?.removeAttribute("hidden");
-          }}
-        />
-        <span hidden className="rounded-lg bg-[var(--color-green)] px-2 py-0.5 text-xs font-black text-white">
-          FLEX
-        </span>
+        {url ? (
+          <img key={url} src={url} alt="Logo" className="h-8 object-contain" />
+        ) : (
+          <span className="rounded-lg bg-[var(--color-green)] px-2 py-0.5 text-xs font-black text-white">
+            FLEX
+          </span>
+        )}
         <div className="flex gap-3">
           <span className="text-xs text-[var(--color-muted)]">Home</span>
           <span className="text-xs text-[var(--color-muted)]">Shop</span>
@@ -285,40 +289,31 @@ function LogoMiniPreview({ version }: { version: number }) {
   );
 }
 
-function HeroPhotoMiniPreviewWithVersion({ version }: { version: number }) {
-  const src = version > 0 ? `/hero-photo.jpg?v=${version}` : "/hero-photo.jpg";
-  const [failed, setFailed] = useState(false);
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] shadow-sm bg-[var(--color-bg)]">
-      <div className="flex items-center justify-center" style={{ aspectRatio: "4/5", maxHeight: 220 }}>
-        {failed ? (
-          <div className="flex flex-col items-center gap-2 p-6 text-center text-[var(--color-muted)]">
-            <span className="text-3xl opacity-30">🖼️</span>
-            <p className="text-xs">No photo yet</p>
-          </div>
-        ) : (
-          <img key={version} src={src} alt="Hero" className="h-full w-full object-cover" onError={() => setFailed(true)} />
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ── Main component ─────────────────────────────────────────────────────────
 
-export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig; hasVideo: boolean }) {
+export function StoreSettingsClient({
+  config,
+  contactInfo,
+  media,
+}: {
+  config: StoreConfig;
+  contactInfo: ContactInfo;
+  media: StoreMedia;
+}) {
   const [heroPreview, setHeroPreview]         = useState(config.hero);
-  const [photoCardPreview, setPhotoCardPreview] = useState(config.photoCard);
+  const [overlayCardPreview, setOverlayCardPreview] = useState<HeroOverlayCard>(media.overlayCard);
   const [videoPreview, setVideoPreview]       = useState(config.video);
   const [footerPreview, setFooterPreview]     = useState(config.footerCta);
   const [colorPreview, setColorPreview]       = useState<StoreColors>(config.colors);
-  const [logoVersion, setLogoVersion]         = useState(0);
-  const [heroVersion, setHeroVersion]         = useState(0);
+  const [deliveryFeePreview, setDeliveryFeePreview] = useState(config.deliveryFeeCents);
+  const [contactPreview, setContactPreview]   = useState(contactInfo);
+  const [logoUrl, setLogoUrl]                 = useState(media.logoUrl);
+  const [heroImageUrl, setHeroImageUrl]       = useState(media.heroImage);
 
   return (
     <div className="space-y-8">
       {/* reset bar */}
-      <div className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 shadow-sm">
         <div>
           <p className="text-sm font-semibold text-[var(--color-text)]">Reset store content</p>
           <p className="text-xs text-[var(--color-muted)]">
@@ -332,8 +327,8 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
       <EditRow
         title="🖼️ Store Logo"
         desc="Shown in the navbar and admin header. Replaces the FLEX text."
-        editor={<LogoUpload onUploaded={setLogoVersion} />}
-        preview={<LogoMiniPreview version={logoVersion} />}
+        editor={<LogoUpload initialUrl={media.logoUrl} onUploaded={setLogoUrl} />}
+        preview={<LogoMiniPreview url={logoUrl} />}
       />
 
       {/* Hero text */}
@@ -341,7 +336,7 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
         title="🎯 Hero Section — Text"
         desc="The main banner at the top of your homepage."
         editor={<HeroTextEditor initial={config.hero} onPreviewChange={setHeroPreview} />}
-        preview={<HeroMiniPreview hero={heroPreview} colors={colorPreview} heroVersion={heroVersion} />}
+        preview={<HeroMiniPreview hero={heroPreview} colors={colorPreview} heroImageUrl={heroImageUrl} />}
       />
 
       {/* Hero photo — preview reuses HeroMiniPreview so photo updates appear there */}
@@ -350,12 +345,13 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
         desc="The commercial photo on the right of the hero banner. Updates the hero preview above."
         editor={
           <HeroPhotoUpload
-            onUploaded={setHeroVersion}
-            initialPhotoCard={config.photoCard}
-            onPhotoCardChange={setPhotoCardPreview}
+            initialImageUrl={media.heroImage}
+            onUploaded={setHeroImageUrl}
+            initialOverlayCard={media.overlayCard}
+            onOverlayCardChange={setOverlayCardPreview}
           />
         }
-        preview={<HeroMiniPreview hero={heroPreview} colors={colorPreview} heroVersion={heroVersion} photoCard={photoCardPreview} />}
+        preview={<HeroMiniPreview hero={heroPreview} colors={colorPreview} heroImageUrl={heroImageUrl} photoCard={overlayCardPreview} />}
       />
 
       {/* Video text */}
@@ -370,7 +366,7 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
       <EditRow
         title="🎬 Video Section — File"
         desc="Upload your brand video. Replaces the placeholder on the homepage."
-        editor={<VideoUpload hasVideo={hasVideo} />}
+        editor={<VideoUpload initialUrl={media.videoUrl} />}
         preview={<VideoMiniPreview video={videoPreview} colors={colorPreview} />}
       />
 
@@ -388,6 +384,22 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
         desc="Pick colors for the entire site. The preview updates instantly."
         editor={<ColorEditor initial={config.colors} onPreviewChange={setColorPreview} />}
         preview={<ColorMiniPreview colors={colorPreview} />}
+      />
+
+      {/* Delivery fee */}
+      <EditRow
+        title="🚚 Delivery Fee"
+        desc="Flat fee added to every order's total at checkout."
+        editor={<DeliveryFeeEditor initialCents={config.deliveryFeeCents} onPreviewChange={setDeliveryFeePreview} />}
+        preview={<DeliveryFeeMiniPreview cents={deliveryFeePreview} />}
+      />
+
+      {/* Contact info */}
+      <EditRow
+        title="📞 Contact Info"
+        desc="Email, phone, and location shown on the public Contact page."
+        editor={<ContactInfoEditor initial={contactInfo} onPreviewChange={setContactPreview} />}
+        preview={<ContactInfoMiniPreview info={contactPreview} />}
       />
 
       {/* ── Full-page scrollable preview ── */}
@@ -426,8 +438,8 @@ export function StoreSettingsClient({ config, hasVideo }: { config: StoreConfig;
               footerCta={footerPreview}
               colors={colorPreview}
               usp={config.usp}
-              logoVersion={logoVersion}
-              heroVersion={heroVersion}
+              logoUrl={logoUrl}
+              heroImageUrl={heroImageUrl}
             />
           </div>
         </div>

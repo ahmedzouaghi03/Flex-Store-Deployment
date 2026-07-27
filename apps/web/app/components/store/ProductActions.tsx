@@ -1,46 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingCart, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/cart-context";
-import type { SizeStock, ColorImage } from "@/types";
+import type { SerializedProductColor } from "@/types";
 
 interface ProductActionsProps {
   productId: string;
-  slug: string;
-  name: string;
-  priceCents: number;
-  imageUrl: string | null;
-  sizeStocks: SizeStock[];
-  colorImages: ColorImage[];
+  productSlug: string;
+  productName: string;
+  basePrice: number;
+  selectedColor: SerializedProductColor | null;
 }
 
 export function ProductActions({
   productId,
-  slug,
-  name,
-  priceCents,
-  imageUrl,
-  sizeStocks,
-  colorImages,
+  productSlug,
+  productName,
+  basePrice,
+  selectedColor,
 }: ProductActionsProps) {
   const { addItem } = useCart();
   const t = useTranslations("Product");
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<ColorImage | null>(
-    colorImages.length > 0 ? colorImages[0] : null,
-  );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const currentSizeEntry = sizeStocks.find((s) => s.size === selectedSize);
-  const availableStock = currentSizeEntry ? currentSizeEntry.stock : null;
+  const sizes = selectedColor?.sizes ?? [];
+  const selectedVariant = sizes.find((s) => s.size === selectedSize) ?? null;
+  const availableStock = selectedVariant?.stock ?? null;
   const outOfStock = availableStock !== null && availableStock === 0;
-  const needsSize = sizeStocks.length > 0 && !selectedSize;
-  const canAdd = !needsSize && !outOfStock;
+  const needsSize = sizes.length > 0 && !selectedSize;
+  const canAdd = !needsSize && !outOfStock && selectedVariant != null;
   const maxQty = availableStock ?? 99;
   const lowStock = availableStock !== null && availableStock > 0 && availableStock <= 3;
+
+  // reset size/quantity whenever the shared color selection changes
+  useEffect(() => {
+    setSelectedSize(null);
+    setQty(1);
+  }, [selectedColor?.id]);
 
   function selectSize(size: string) {
     setSelectedSize(size);
@@ -48,18 +49,22 @@ export function ProductActions({
   }
 
   function handleAddToCart() {
-    if (!canAdd) return;
-    const img = selectedColor?.imageUrls[0] ?? imageUrl;
+    if (!canAdd || !selectedVariant) return;
+    const image = selectedColor?.images[0]?.url ?? null;
+    const unitPrice = selectedVariant.priceOverride ?? basePrice;
+
     addItem({
+      variantId: selectedVariant.id,
       productId,
-      slug,
-      name,
-      priceCents,
-      imageUrl: img,
-      size: selectedSize,
+      productSlug,
+      productName,
+      image,
+      unitPrice,
       colorName: selectedColor?.name ?? null,
       colorHex: selectedColor?.hex ?? null,
+      size: selectedSize,
       quantity: qty,
+      maxStock: availableStock ?? undefined,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -67,44 +72,19 @@ export function ProductActions({
 
   return (
     <div className="space-y-6">
-      {/* Colors */}
-      {colorImages.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
-            {t("Color")}{selectedColor ? `: ${selectedColor.name}` : ""}
-          </h2>
-          <div className="flex flex-wrap gap-2.5">
-            {colorImages.map((c) => (
-              <button
-                key={c.name}
-                type="button"
-                onClick={() => setSelectedColor(c)}
-                title={c.name}
-                className={`h-8 w-8 rounded-full border-2 transition-transform ${
-                  selectedColor?.name === c.name
-                    ? "border-[var(--color-accent)] scale-110 shadow-md"
-                    : "border-transparent hover:scale-105 hover:border-[var(--color-border)]"
-                }`}
-                style={{ backgroundColor: c.hex }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Sizes */}
-      {sizeStocks.length > 0 && (
+      {sizes.length > 0 && (
         <div>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
             {t("Size")}{selectedSize ? `: ${selectedSize}` : ""}
           </h2>
           <div className="flex flex-wrap gap-2">
-            {sizeStocks.map((ss) => {
+            {sizes.map((ss) => {
               const isSelected = selectedSize === ss.size;
               const isOut = ss.stock === 0;
               return (
                 <button
-                  key={ss.size}
+                  key={ss.id}
                   type="button"
                   disabled={isOut}
                   onClick={() => selectSize(ss.size)}
@@ -117,17 +97,13 @@ export function ProductActions({
                   }`}
                 >
                   {ss.size}
-                  {isOut && (
-                    <span className="ml-1 text-xs font-normal">{t("SoldOut")}</span>
-                  )}
+                  {isOut && <span className="ml-1 text-xs font-normal">{t("SoldOut")}</span>}
                 </button>
               );
             })}
           </div>
           {needsSize && (
-            <p className="mt-2 text-xs text-[var(--color-muted)]">
-              {t("SelectSize")}
-            </p>
+            <p className="mt-2 text-xs text-[var(--color-muted)]">{t("SelectSize")}</p>
           )}
           {lowStock && (
             <p className="mt-2 text-xs font-semibold text-orange-500">
@@ -138,7 +114,7 @@ export function ProductActions({
       )}
 
       {/* Quantity */}
-      {!needsSize && !outOfStock && (
+      {!needsSize && !outOfStock && selectedVariant && (
         <div>
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
             {t("Quantity")}

@@ -2,15 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@shoestore/db";
-import type { ActionResult, ProductInput, AdminProductDetail, ColorImage, SizeStock } from "@/types";
-
-function parseSizeEntry(entry: string): SizeStock {
-  try { return JSON.parse(entry) as SizeStock; }
-  catch { return { size: entry, stock: 99 }; }
-}
-function serializeSizes(sizeStocks: SizeStock[]): string[] {
-  return sizeStocks.map((s) => JSON.stringify(s));
-}
+import type {
+  ActionResult,
+  AdminProductDetail,
+  ProductInput,
+  ColorImage,
+} from "@/types";
 
 function toSlug(text: string): string {
   return text
@@ -21,28 +18,40 @@ function toSlug(text: string): string {
     .replace(/-+/g, "-");
 }
 
-function parseColorEntry(entry: string): ColorImage {
-  try {
-    const parsed = JSON.parse(entry) as {
-      name: string;
-      hex?: string;
-      imageUrl?: string;
-      imageUrls?: string[];
-    };
-    return {
-      name: parsed.name,
-      hex: parsed.hex ?? "#888888",
-      imageUrls: parsed.imageUrls ?? (parsed.imageUrl ? [parsed.imageUrl] : []),
-    };
-  } catch {
-    return { name: entry, hex: "#888888", imageUrls: [] };
-  }
-}
+const ADMIN_INCLUDE = {
+  category: { select: { name: true } },
+  images: { orderBy: { order: "asc" as const } },
+  colors: {
+    orderBy: { order: "asc" as const },
+    include: {
+      images: { orderBy: { order: "asc" as const } },
+      sizes: { orderBy: { size: "asc" as const } },
+    },
+  },
+} as const;
 
-function serializeColors(colorImages: ColorImage[]): string[] {
-  return colorImages.map((c) =>
-    JSON.stringify({ name: c.name, hex: c.hex, imageUrls: c.imageUrls }),
-  );
+function productToAdminDetail(
+  p: any,
+): AdminProductDetail & { brandName: string | null } {
+  const images: string[] = (p.images ?? []).map((i: any) => i.url);
+  const colorImages: ColorImage[] = p.colors.map((c: any) => ({
+    name: c.name,
+    hex: c.hex ?? "#888888",
+    imageUrls: c.images.map((i: any) => i.url),
+    sizes: c.sizes.map((s: any) => ({ size: s.size, stock: s.stock })),
+  }));
+
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    priceCents: Math.round(Number(p.basePrice) * 100),
+    images,
+    colorImages,
+    isPublished: p.isPublished,
+    isFeatured: p.isFeatured,
+    brandName: p.category?.name ?? null,
+  };
 }
 
 export async function getAdminProducts(): Promise<
@@ -50,25 +59,10 @@ export async function getAdminProducts(): Promise<
 > {
   try {
     const products = await db.product.findMany({
-      where: { isDeleted: false },
       orderBy: { createdAt: "desc" },
-      include: { brand: { select: { name: true } } },
+      include: ADMIN_INCLUDE,
     });
-    return {
-      success: true,
-      data: products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        priceCents: p.priceCents,
-        images: p.images,
-        sizeStocks: p.sizes.map(parseSizeEntry),
-        colorImages: p.colors.map(parseColorEntry),
-        isPublished: p.isPublished,
-        isFeatured: p.isFeatured,
-        brandName: p.brand?.name ?? null,
-      })),
-    };
+    return { success: true, data: products.map(productToAdminDetail) };
   } catch (error) {
     console.error("[ADMIN] list error:", error);
     return { success: false, error: "Failed to load products" };
@@ -79,22 +73,9 @@ export async function getProductForEdit(
   slug: string,
 ): Promise<ActionResult<AdminProductDetail>> {
   try {
-    const p = await db.product.findUnique({ where: { slug, isDeleted: false } });
+    const p = await db.product.findUnique({ where: { slug }, include: ADMIN_INCLUDE });
     if (!p) return { success: false, error: "Product not found" };
-    return {
-      success: true,
-      data: {
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        priceCents: p.priceCents,
-        images: p.images,
-        sizeStocks: p.sizes.map(parseSizeEntry),
-        colorImages: p.colors.map(parseColorEntry),
-        isPublished: p.isPublished,
-        isFeatured: p.isFeatured,
-      },
-    };
+    return { success: true, data: productToAdminDetail(p) };
   } catch (error) {
     console.error("[ADMIN] getProductForEdit error:", error);
     return { success: false, error: "Failed to load product" };
@@ -108,19 +89,33 @@ export async function createProduct(
     if (!data.name) return { success: false, error: "Name is required" };
 
     const baseSlug = toSlug(data.name);
-    const exists = await db.product.findUnique({ where: { slug: baseSlug } });
-    const slug = exists ? `${baseSlug}-${Date.now()}` : baseSlug;
+    const existing = await db.product.findUnique({ where: { slug: baseSlug } });
+    const slug = existing ? `${baseSlug}-${Date.now()}` : baseSlug;
+    const basePrice = data.priceCents / 100;
+
+    const colorsData = data.colorImages.map((c, colorIdx) => ({
+      name: c.name,
+      hex: c.hex,
+      order: colorIdx,
+      images: {
+        create: c.imageUrls.map((url, imgIdx) => ({ url, order: imgIdx })),
+      },
+      sizes: {
+        create: c.sizes.map((s) => ({ size: s.size, stock: s.stock })),
+      },
+    }));
 
     await db.product.create({
       data: {
         name: data.name,
         slug,
-        priceCents: data.priceCents,
-        images: data.images.filter(Boolean),
-        sizes: serializeSizes(data.sizeStocks),
-        colors: serializeColors(data.colorImages),
+        basePrice,
         isPublished: data.isPublished,
         isFeatured: data.isFeatured,
+        images: {
+          create: data.images.map((url, idx) => ({ url, order: idx })),
+        },
+        colors: { create: colorsData },
       },
     });
 
@@ -139,16 +134,35 @@ export async function updateProduct(
   data: ProductInput,
 ): Promise<ActionResult> {
   try {
+    const basePrice = data.priceCents / 100;
+
+    // Delete existing images and colors (colors cascade to images and sizes)
+    await db.productImage.deleteMany({ where: { productId: id } });
+    await db.productColor.deleteMany({ where: { productId: id } });
+
+    const colorsData = data.colorImages.map((c, colorIdx) => ({
+      name: c.name,
+      hex: c.hex,
+      order: colorIdx,
+      images: {
+        create: c.imageUrls.map((url, imgIdx) => ({ url, order: imgIdx })),
+      },
+      sizes: {
+        create: c.sizes.map((s) => ({ size: s.size, stock: s.stock })),
+      },
+    }));
+
     await db.product.update({
       where: { id },
       data: {
         name: data.name,
-        priceCents: data.priceCents,
-        images: data.images.filter(Boolean),
-        sizes: serializeSizes(data.sizeStocks),
-        colors: serializeColors(data.colorImages),
+        basePrice,
         isPublished: data.isPublished,
         isFeatured: data.isFeatured,
+        images: {
+          create: data.images.map((url, idx) => ({ url, order: idx })),
+        },
+        colors: { create: colorsData },
       },
     });
 
@@ -164,7 +178,7 @@ export async function updateProduct(
 
 export async function deleteProduct(id: string): Promise<ActionResult> {
   try {
-    await db.product.update({ where: { id }, data: { isDeleted: true } });
+    await db.product.delete({ where: { id } });
     revalidatePath("/");
     revalidatePath("/shop");
     revalidatePath("/admin/products");
@@ -175,7 +189,10 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   }
 }
 
-export async function toggleProductPublished(id: string, value: boolean): Promise<ActionResult> {
+export async function toggleProductPublished(
+  id: string,
+  value: boolean,
+): Promise<ActionResult> {
   try {
     await db.product.update({ where: { id }, data: { isPublished: value } });
     revalidatePath("/");
@@ -187,7 +204,10 @@ export async function toggleProductPublished(id: string, value: boolean): Promis
   }
 }
 
-export async function toggleProductFeatured(id: string, value: boolean): Promise<ActionResult> {
+export async function toggleProductFeatured(
+  id: string,
+  value: boolean,
+): Promise<ActionResult> {
   try {
     await db.product.update({ where: { id }, data: { isFeatured: value } });
     revalidatePath("/");
@@ -195,5 +215,75 @@ export async function toggleProductFeatured(id: string, value: boolean): Promise
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to update product" };
+  }
+}
+
+// ── Inline table edits ──────────────────────────────────────────────────────
+
+export async function updateProductQuickFields(
+  id: string,
+  data: { name?: string; priceCents?: number },
+): Promise<ActionResult> {
+  try {
+    const update: { name?: string; basePrice?: number } = {};
+    if (data.name !== undefined) {
+      const name = data.name.trim();
+      if (!name) return { success: false, error: "Name cannot be empty" };
+      update.name = name;
+    }
+    if (data.priceCents !== undefined) {
+      if (isNaN(data.priceCents) || data.priceCents < 0) {
+        return { success: false, error: "Enter a valid price" };
+      }
+      update.basePrice = data.priceCents / 100;
+    }
+    await db.product.update({ where: { id }, data: update });
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] updateProductQuickFields error:", error);
+    return { success: false, error: "Failed to update product" };
+  }
+}
+
+// ── Bulk actions ─────────────────────────────────────────────────────────────
+
+export async function bulkDeleteProducts(ids: string[]): Promise<ActionResult> {
+  try {
+    await db.product.deleteMany({ where: { id: { in: ids } } });
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] bulkDeleteProducts error:", error);
+    return { success: false, error: "Failed to delete products" };
+  }
+}
+
+export async function bulkSetPublished(ids: string[], value: boolean): Promise<ActionResult> {
+  try {
+    await db.product.updateMany({ where: { id: { in: ids } }, data: { isPublished: value } });
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] bulkSetPublished error:", error);
+    return { success: false, error: "Failed to update products" };
+  }
+}
+
+export async function bulkSetFeatured(ids: string[], value: boolean): Promise<ActionResult> {
+  try {
+    await db.product.updateMany({ where: { id: { in: ids } }, data: { isFeatured: value } });
+    revalidatePath("/");
+    revalidatePath("/admin/products");
+    return { success: true };
+  } catch (error) {
+    console.error("[ADMIN] bulkSetFeatured error:", error);
+    return { success: false, error: "Failed to update products" };
   }
 }

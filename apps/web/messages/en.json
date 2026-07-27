@@ -2,6 +2,8 @@
   "Nav": {
     "Home": "Home",
     "Shop": "Shop",
+    "About": "About",
+    "Contact": "Contact",
     "Cart": "Cart",
     "SignIn": "Sign In"
   },
@@ -29,6 +31,9 @@
     "City": "City",
     "PlaceOrder": "Place Order",
     "OrderSummary": "Order Summary",
+    "Subtotal": "Subtotal",
+    "Shipping": "Shipping",
+    "Free": "Free",
     "Total": "Total",
     "Size": "Size",
     "ErrorNameRequired": "Please enter your full name.",

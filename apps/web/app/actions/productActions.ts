@@ -1,83 +1,97 @@
 "use server";
 
-import { db, type Gender } from "@shoestore/db";
-import type { ActionResult, ColorImage, SizeStock, ProductDetail, ProductListItem } from "@/types";
+import { db } from "@shoestore/db";
+import type { ActionResult, SerializedProduct, SerializedProductColor } from "@/types";
 
-function parseSizeEntry(entry: string): SizeStock {
-  try { return JSON.parse(entry) as SizeStock; }
-  catch { return { size: entry, stock: 99 }; }
+function serializeColor(color: {
+  id: string;
+  name: string;
+  hex: string | null;
+  isActive: boolean;
+  images: { id: string; url: string; alt: string | null; order: number }[];
+  sizes: { id: string; size: string; stock: number; priceOverride: any }[];
+}): SerializedProductColor {
+  return {
+    id: color.id,
+    name: color.name,
+    hex: color.hex,
+    isActive: color.isActive,
+    images: color.images.map((img) => ({
+      id: img.id,
+      url: img.url,
+      alt: img.alt,
+      order: img.order,
+    })),
+    sizes: color.sizes.map((s) => ({
+      id: s.id,
+      size: s.size,
+      stock: s.stock,
+      priceOverride: s.priceOverride != null ? Number(s.priceOverride) : null,
+    })),
+  };
 }
 
-function parseColorEntry(entry: string): ColorImage {
-  try {
-    const parsed = JSON.parse(entry) as {
-      name: string;
-      hex?: string;
-      imageUrl?: string;
-      imageUrls?: string[];
-    };
-    return {
-      name: parsed.name,
-      hex: parsed.hex ?? "#888888",
-      imageUrls: parsed.imageUrls ?? (parsed.imageUrl ? [parsed.imageUrl] : []),
-    };
-  } catch {
-    return { name: entry, hex: "#888888", imageUrls: [] };
-  }
-}
-
-export type ShopFilters = {
-  gender?: Gender;
-  brandSlug?: string;
-  categorySlug?: string;
-  search?: string;
-};
-
-function mapListItem(product: {
+function serializeProduct(product: {
   id: string;
   name: string;
   slug: string;
-  priceCents: number;
-  compareAtPriceCents: number | null;
-  images: string[];
-  gender: string;
+  description: string | null;
+  basePrice: any;
+  isPublished: boolean;
   isFeatured: boolean;
-  brand: { name: string } | null;
-}): ProductListItem {
+  createdAt: Date;
+  updatedAt: Date;
+  category: { id: string; name: string; slug: string } | null;
+  images: { id: string; url: string; alt: string | null; order: number }[];
+  colors: any[];
+}): SerializedProduct {
+  const primaryImage =
+    product.images[0]?.url ?? product.colors[0]?.images[0]?.url ?? null;
   return {
     id: product.id,
     name: product.name,
     slug: product.slug,
-    priceCents: product.priceCents,
-    compareAtPriceCents: product.compareAtPriceCents,
-    imageUrl: product.images[0] ?? null,
-    brandName: product.brand?.name ?? null,
-    gender: product.gender,
+    description: product.description,
+    basePrice: Number(product.basePrice),
+    primaryImage,
+    images: product.images.map((i) => ({
+      id: i.id,
+      url: i.url,
+      alt: i.alt,
+      order: i.order,
+    })),
+    isPublished: product.isPublished,
     isFeatured: product.isFeatured,
+    category: product.category ?? null,
+    colors: product.colors.map(serializeColor),
+    createdAt: product.createdAt.toISOString(),
+    updatedAt: product.updatedAt.toISOString(),
   };
 }
 
-export async function getPublishedProducts(
-  filters?: ShopFilters,
-): Promise<ActionResult<ProductListItem[]>> {
+const PRODUCT_INCLUDE = {
+  category: { select: { id: true, name: true, slug: true } },
+  images: { orderBy: { order: "asc" as const } },
+  colors: {
+    where: { isActive: true },
+    orderBy: { order: "asc" as const },
+    include: {
+      images: { orderBy: { order: "asc" as const } },
+      sizes: { orderBy: { size: "asc" as const } },
+    },
+  },
+} as const;
+
+export async function getPublishedProducts(filters?: {
+  categorySlug?: string;
+  search?: string;
+}): Promise<ActionResult<SerializedProduct[]>> {
   try {
     const search = filters?.search?.trim();
-
     const products = await db.product.findMany({
       where: {
         isPublished: true,
-        isDeleted: false,
-        ...(filters?.gender ? { gender: filters.gender } : {}),
-        ...(filters?.brandSlug
-          ? { brand: { slug: filters.brandSlug, isDeleted: false } }
-          : {}),
-        ...(filters?.categorySlug
-          ? {
-              categories: {
-                some: { slug: filters.categorySlug, isDeleted: false },
-              },
-            }
-          : {}),
+        ...(filters?.categorySlug ? { category: { slug: filters.categorySlug } } : {}),
         ...(search
           ? {
               OR: [
@@ -87,100 +101,75 @@ export async function getPublishedProducts(
             }
           : {}),
       },
-      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
-      include: {
-        brand: { select: { name: true } },
-      },
+      orderBy: [{ isFeatured: "desc" }, { order: "asc" }, { createdAt: "desc" }],
+      include: PRODUCT_INCLUDE,
     });
-
-    return { success: true, data: products.map(mapListItem) };
+    return { success: true, data: products.map(serializeProduct) };
   } catch (error) {
     console.error("[PRODUCTS] list error:", error);
     return { success: false, error: "Failed to load products" };
   }
 }
 
-export async function getFeaturedProducts(): Promise<
-  ActionResult<ProductListItem[]>
-> {
+export async function getFeaturedProducts(): Promise<ActionResult<SerializedProduct[]>> {
   try {
     const products = await db.product.findMany({
-      where: { isPublished: true, isDeleted: false, isFeatured: true },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-      include: { brand: { select: { name: true } } },
+      where: { isPublished: true, isFeatured: true },
+      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      take: 6,
+      include: PRODUCT_INCLUDE,
     });
-    return { success: true, data: products.map(mapListItem) };
+    return { success: true, data: products.map(serializeProduct) };
   } catch (error) {
     console.error("[PRODUCTS] featured error:", error);
     return { success: false, error: "Failed to load featured products" };
   }
 }
 
-export async function getProductBySlug(
-  slug: string,
-): Promise<ActionResult<ProductDetail>> {
+export async function getProductBySlug(slug: string): Promise<ActionResult<SerializedProduct>> {
   if (!slug) return { success: false, error: "Product not found" };
-
   try {
     const product = await db.product.findFirst({
-      where: { slug, isPublished: true, isDeleted: false },
-      include: {
-        brand: { select: { name: true } },
-        categories: { select: { name: true } },
-      },
+      where: { slug, isPublished: true },
+      include: PRODUCT_INCLUDE,
     });
-
     if (!product) return { success: false, error: "Product not found" };
-
-    return {
-      success: true,
-      data: {
-        ...mapListItem(product),
-        description: product.description,
-        images: product.images,
-        colorImages: product.colors.map(parseColorEntry),
-        sizeStocks: product.sizes.map(parseSizeEntry),
-        categories: product.categories.map((c) => c.name),
-      },
-    };
+    return { success: true, data: serializeProduct(product) };
   } catch (error) {
     console.error("[PRODUCTS] detail error:", error);
     return { success: false, error: "Failed to load product" };
   }
 }
 
-export async function getShopFilters(): Promise<
-  ActionResult<{
-    brands: { name: string; slug: string }[];
-    categories: { name: string; slug: string }[];
-    genders: Gender[];
-  }>
+export async function getProductColors(
+  productId: string,
+): Promise<ActionResult<SerializedProductColor[]>> {
+  if (!productId) return { success: false, error: "Product not found" };
+  try {
+    const product = await db.product.findUnique({
+      where: { id: productId },
+      select: { colors: PRODUCT_INCLUDE.colors },
+    });
+    if (!product) return { success: false, error: "Product not found" };
+    return { success: true, data: product.colors.map(serializeColor) };
+  } catch (error) {
+    console.error("[PRODUCTS] colors error:", error);
+    return { success: false, error: "Failed to load product options" };
+  }
+}
+
+export async function getCategories(): Promise<
+  ActionResult<{ id: string; name: string; slug: string }[]>
 > {
   try {
-    const [brands, categories] = await Promise.all([
-      db.brand.findMany({
-        where: { isDeleted: false },
-        orderBy: { name: "asc" },
-        select: { name: true, slug: true },
-      }),
-      db.category.findMany({
-        where: { isDeleted: false },
-        orderBy: { name: "asc" },
-        select: { name: true, slug: true },
-      }),
-    ]);
-
-    return {
-      success: true,
-      data: {
-        brands,
-        categories,
-        genders: ["MEN", "WOMEN", "UNISEX", "KIDS"],
-      },
-    };
+    const categories = await db.category.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, slug: true },
+    });
+    return { success: true, data: categories };
   } catch (error) {
-    console.error("[PRODUCTS] filters error:", error);
-    return { success: false, error: "Failed to load filters" };
+    console.error("[PRODUCTS] categories error:", error);
+    return { success: false, error: "Failed to load categories" };
   }
 }

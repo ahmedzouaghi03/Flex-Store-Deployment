@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 
-export function HeroImage() {
+export function HeroImage({ src }: { src?: string | null }) {
   const [failed, setFailed] = useState(false);
 
-  if (failed) {
+  if (!src || failed) {
     return (
       <div
         className="relative flex w-full flex-col items-center justify-center gap-4 rounded-3xl border border-white/15 bg-white/5 backdrop-blur-sm"
@@ -25,9 +25,9 @@ export function HeroImage() {
           />
         </svg>
         <p className="text-center text-sm text-white/30">
-          Add your photo to
+          Add a hero photo from
           <br />
-          <code className="text-white/50">public/hero-photo.jpg</code>
+          <code className="text-white/50">Admin → Store Settings</code>
         </p>
       </div>
     );
@@ -35,7 +35,7 @@ export function HeroImage() {
 
   return (
     <img
-      src="/hero-photo.jpg"
+      src={src}
       alt="Flex Comfort Shoes"
       onError={() => setFailed(true)}
       className="relative w-full rounded-3xl border border-white/20 object-cover shadow-[0_30px_80px_rgba(0,0,0,0.4)]"

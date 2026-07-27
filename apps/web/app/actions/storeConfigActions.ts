@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getStoreConfig, saveStoreConfig, DEFAULT_CONFIG } from "@/lib/store-config";
+import { getDeliveryFee as getDeliveryFeeFromDB, saveDeliveryFee as saveDeliveryFeeInDB, getContactInfo as getContactInfoFromDB, saveContactInfo as saveContactInfoInDB } from "./storeSettingsActions";
 import type { StoreConfig, StoreColors } from "@/lib/store-config";
+import type { ContactInfo } from "@/types";
 
 function revalidateAll() {
   revalidatePath("/", "layout");
@@ -102,4 +104,38 @@ export async function saveColors(
   } catch {
     return { success: false, error: "Failed to save" };
   }
+}
+
+// deliveryFee is in cents (legacy admin UI convention) — convert to TND before storing
+export async function saveDeliveryFee(
+  deliveryFeeCents: number,
+): Promise<{ success: boolean; error?: string }> {
+  const result = await saveDeliveryFeeInDB(deliveryFeeCents / 100);
+  if (!result.success) return { success: false, error: result.error };
+  revalidatePath("/cart");
+  revalidatePath("/checkout");
+  return { success: true };
+}
+
+export async function getDeliveryFee(): Promise<number> {
+  return getDeliveryFeeFromDB();
+}
+
+// Legacy alias — delivery fee is now stored in TND, not cents
+export async function getDeliveryFeeCents(): Promise<number> {
+  const tnd = await getDeliveryFeeFromDB();
+  return Math.round(tnd * 100);
+}
+
+export async function getContactInfo(): Promise<ContactInfo> {
+  return getContactInfoFromDB();
+}
+
+export async function saveContactInfo(
+  data: ContactInfo,
+): Promise<{ success: boolean; error?: string }> {
+  const result = await saveContactInfoInDB(data);
+  if (!result.success) return { success: false, error: result.error };
+  revalidatePath("/contact");
+  return { success: true };
 }

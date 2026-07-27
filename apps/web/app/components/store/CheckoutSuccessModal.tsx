@@ -7,14 +7,15 @@ import { useTranslations } from "next-intl";
 import { registerUser, loginUser, checkUserExists } from "@/actions/customerAuthActions";
 
 type Props = {
-  publicId: string | null;
+  orderNumber: string;
+  orderId: string;
   prefill: { name: string; email: string; phone: string };
 };
 
 const inp =
   "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition disabled:bg-[var(--color-bg)] disabled:cursor-not-allowed";
 
-export function CheckoutSuccessModal({ publicId, prefill }: Props) {
+export function CheckoutSuccessModal({ orderNumber, orderId, prefill }: Props) {
   const router = useRouter();
   const t = useTranslations("Modal");
   const [isPending, startTransition] = useTransition();
@@ -41,7 +42,7 @@ export function CheckoutSuccessModal({ publicId, prefill }: Props) {
   }, []);
 
   function skip() {
-    router.push(publicId ? `/checkout/success?ref=${publicId}` : "/");
+    router.push(`/checkout/success?ref=${orderNumber}`);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -53,15 +54,16 @@ export function CheckoutSuccessModal({ publicId, prefill }: Props) {
         const result = await registerUser({
           name: prefill.name,
           email: prefill.email,
-          phone: prefill.phone,
+          phoneNumber: prefill.phone,
           password,
+          orderId,
         });
         if (!result.success) { setError(result.error ?? "Something went wrong."); return; }
         router.push("/account");
       });
     } else {
       startTransition(async () => {
-        const result = await loginUser({ email: prefill.email, password });
+        const result = await loginUser({ email: prefill.email, password, orderId });
         if (!result.success) { setError(result.error ?? "Invalid password."); return; }
         router.push("/account");
       });
@@ -78,7 +80,7 @@ export function CheckoutSuccessModal({ publicId, prefill }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
 
         {/* Header */}
         <div className="bg-emerald-50 px-6 py-5 text-center relative">

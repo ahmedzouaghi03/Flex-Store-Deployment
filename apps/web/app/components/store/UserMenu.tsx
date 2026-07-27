@@ -2,11 +2,11 @@
 
 import { useRef, useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Package, UserCircle, LogOut, ChevronDown, Loader2 } from "lucide-react";
+import { Package, UserCircle, LogOut, ChevronDown, Loader2, LayoutDashboard } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { logoutUser } from "@/actions/customerAuthActions";
 
-type Props = { name: string; email: string };
+type Props = { name: string; email: string; role: string };
 
 function getInitials(name: string) {
   return name
@@ -28,7 +28,9 @@ function avatarColor(name: string) {
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-export function UserMenu({ name, email }: Props) {
+const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN"]);
+
+export function UserMenu({ name, email, role }: Props) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
@@ -58,8 +60,15 @@ export function UserMenu({ name, email }: Props) {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-[var(--color-bg)]"
       >
-        <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${color}`}>
-          {initials}
+        <span className="relative">
+          <span className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${color}`}>
+            {initials}
+          </span>
+          {ADMIN_ROLES.has(role) && (
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-accent)] ring-2 ring-white">
+              <LayoutDashboard size={8} className="text-white" />
+            </span>
+          )}
         </span>
         <span className="hidden text-sm font-semibold text-[var(--color-text)] sm:block">
           {name.split(" ")[0]}
@@ -77,6 +86,20 @@ export function UserMenu({ name, email }: Props) {
             <p className="text-sm font-bold text-[var(--color-text)] truncate">{name}</p>
             <p className="text-xs text-[var(--color-muted)] truncate">{email}</p>
           </div>
+
+          {/* Admin shortcut */}
+          {ADMIN_ROLES.has(role) && (
+            <div className="border-b border-[var(--color-border)] py-1.5">
+              <Link
+                href="/admin/orders"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--color-accent)] hover:bg-[var(--color-accent)]/5 transition"
+              >
+                <LayoutDashboard size={15} />
+                Admin Dashboard
+              </Link>
+            </div>
+          )}
 
           {/* Menu items */}
           <div className="py-1.5">

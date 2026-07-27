@@ -1,25 +1,33 @@
 import Link from "next/link";
 import { ArrowRight, Play, Feather, Leaf, Zap, Star } from "lucide-react";
-import { existsSync } from "fs";
-import { join } from "path";
 
 import { getFeaturedProducts } from "@/actions/productActions";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { HeroImage } from "@/components/store/HeroImage";
 import { AutoPlayVideo } from "@/components/store/AutoPlayVideo";
 import { getStoreConfig } from "@/lib/store-config";
+import { getStoreSettings } from "@/actions/storeSettingsActions";
 
 const USP_ICONS = [Feather, Leaf, Zap, Star];
 
 export default async function HomePage() {
-  const [featured, config] = await Promise.all([
+  const [featured, settingsResult] = await Promise.all([
     getFeaturedProducts(),
-    Promise.resolve(getStoreConfig()),
+    getStoreSettings(),
   ]);
+  const config = getStoreConfig();
   const products = featured.success ? (featured.data ?? []) : [];
-  const { hero, photoCard, usp, video, collection, footerCta } = config;
+  const { hero, usp, video, collection, footerCta } = config;
+  const settings = settingsResult.success ? settingsResult.data : null;
 
-  const hasVideo = existsSync(join(process.cwd(), "public", "store-video.mp4"));
+  const overlayCard = {
+    label: settings?.heroOverlayCardLabel ?? "Collection",
+    year: settings?.heroOverlayCardYear ?? "2025",
+    collection: settings?.heroOverlayCardCollection ?? "",
+  };
+
+  const videoUrl = settings?.videoUrl ?? null;
+  const hasVideo = videoUrl !== null;
 
   return (
     <main>
@@ -49,7 +57,7 @@ export default async function HomePage() {
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--color-green-bright)]" />
                 {hero.badge}
               </span>
-              <h1 className="mt-6 text-6xl font-black leading-[1.05] tracking-tight text-white md:text-7xl">
+              <h1 className="mt-6 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl">
                 {hero.line1}
                 <br />
                 <span className="text-[var(--color-green-bright)] drop-shadow-[0_0_40px_rgba(158,212,58,0.4)]">
@@ -69,13 +77,15 @@ export default async function HomePage() {
                   {hero.cta1}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
-                <a
-                  href="#video"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                >
-                  <Play className="h-4 w-4 fill-white" />
-                  {hero.cta2}
-                </a>
+                {hasVideo && (
+                  <a
+                    href="#video"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                  >
+                    <Play className="h-4 w-4 fill-white" />
+                    {hero.cta2}
+                  </a>
+                )}
               </div>
             </div>
 
@@ -84,10 +94,13 @@ export default async function HomePage() {
               <div className="relative w-full max-w-md">
                 <div className="absolute -inset-3 rounded-[2.5rem] border border-white/10" />
                 <div className="absolute inset-0 rounded-3xl bg-[var(--color-green-bright)] opacity-10 blur-2xl" />
-                <HeroImage />
+                <HeroImage src={settings?.heroImage} />
                 <div className="absolute -bottom-4 -left-4 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-md">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">{photoCard.label}</p>
-                  <p className="text-base font-black text-white">{photoCard.year}</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">{overlayCard.label}</p>
+                  <p className="text-base font-black text-white">{overlayCard.year}</p>
+                  {overlayCard.collection && (
+                    <p className="text-xs text-white/70">{overlayCard.collection}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -104,7 +117,7 @@ export default async function HomePage() {
       {/* ── USP BAR ──────────────────────────────────────────────────── */}
       <section className="border-b border-[var(--color-border)] bg-white">
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-8">
             {usp.map((item, i) => {
               const Icon = USP_ICONS[i] ?? Star;
               return (
@@ -124,43 +137,30 @@ export default async function HomePage() {
       </section>
 
       {/* ── VIDEO ────────────────────────────────────────────────────── */}
-      <section id="video" className="py-24 bg-[var(--color-bg)]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
-              {video.label}
-            </p>
-            <h2 className="mt-2 text-3xl font-bold text-[var(--color-text)] md:text-4xl">
-              {video.title}
-            </h2>
-            <p className="mt-3 text-sm text-[var(--color-muted)]">{video.desc}</p>
-          </div>
+      {videoUrl && (
+        <section id="video" className="py-24 bg-[var(--color-bg)]">
+          <div className="mx-auto max-w-6xl px-6">
+            <div className="mb-10 text-center">
+              <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
+                {video.label}
+              </p>
+              <h2 className="mt-2 text-3xl font-bold text-[var(--color-text)] md:text-4xl">
+                {video.title}
+              </h2>
+              <p className="mt-3 text-sm text-[var(--color-muted)]">{video.desc}</p>
+            </div>
 
-          <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
-            {hasVideo ? (
-              <AutoPlayVideo src="/store-video.mp4" />
-            ) : (
-              <>
-                <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-green-dark)] via-[var(--color-green)] to-[var(--color-green-mid)]" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/15 ring-2 ring-white/25 backdrop-blur-sm">
-                    <Play className="ml-1 h-8 w-8 fill-white text-white" />
-                  </div>
-                  <p className="text-sm text-white/50">Upload your video from the admin panel</p>
-                </div>
-                <div className="absolute top-5 left-5 rounded-full border border-white/20 bg-black/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                  FLEX COMFORT SHOES
-                </div>
-              </>
-            )}
+            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
+              <AutoPlayVideo src={videoUrl} />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── PRODUCTS ─────────────────────────────────────────────────── */}
       <section className="border-t border-[var(--color-border)] py-20 bg-white">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 flex items-end justify-between gap-4">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
                 {collection.label}

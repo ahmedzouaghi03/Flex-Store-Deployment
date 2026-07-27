@@ -8,11 +8,11 @@ type Props = {
   footerCta: StoreConfig["footerCta"];
   usp: StoreConfig["usp"];
   colors: StoreColors;
-  logoVersion?: number;
-  heroVersion?: number;
+  logoUrl?: string | null;
+  heroImageUrl?: string | null;
 };
 
-export function StorePreview({ hero, video, footerCta, usp, colors, logoVersion = 0, heroVersion = 0 }: Props) {
+export function StorePreview({ hero, video, footerCta, usp, colors, logoUrl, heroImageUrl }: Props) {
   // scoped CSS variables so they don't bleed into the admin UI
   const vars = {
     "--p-dark":   colors["green-dark"],
@@ -43,24 +43,16 @@ export function StorePreview({ hero, video, footerCta, usp, colors, logoVersion 
         {/* ── mini navbar ── */}
         <div className="flex items-center justify-between border-b border-[#e5e7eb] bg-white px-4 py-2">
           <div className="flex items-center gap-1.5">
-            <img
-              key={logoVersion}
-              src={logoVersion > 0 ? `/store-logo.png?v=${logoVersion}` : "/store-logo.png"}
-              alt="logo"
-              className="h-5 object-contain"
-              onError={(e) => {
-                const el = e.currentTarget as HTMLImageElement;
-                el.style.display = "none";
-                (el.nextElementSibling as HTMLElement | null)?.removeAttribute("hidden");
-              }}
-            />
-            <span
-              hidden
-              className="rounded px-1.5 py-0.5 text-[9px] font-black text-white"
-              style={{ backgroundColor: "var(--p-green)" }}
-            >
-              FLEX
-            </span>
+            {logoUrl ? (
+              <img key={logoUrl} src={logoUrl} alt="logo" className="h-5 object-contain" />
+            ) : (
+              <span
+                className="rounded px-1.5 py-0.5 text-[9px] font-black text-white"
+                style={{ backgroundColor: "var(--p-green)" }}
+              >
+                FLEX
+              </span>
+            )}
             <span className="text-[9px] text-gray-500">Comfort Shoes</span>
           </div>
           <div className="flex gap-3">
@@ -121,19 +113,11 @@ export function StorePreview({ hero, video, footerCta, usp, colors, logoVersion 
             {/* right: hero photo */}
             <div
               className="shrink-0 overflow-hidden rounded-xl border border-white/15"
-              style={{ width: 72, aspectRatio: "4/5" }}
+              style={{ width: 72, aspectRatio: "4/5", background: heroImageUrl ? undefined : "rgba(255,255,255,0.1)" }}
             >
-              <img
-                key={heroVersion}
-                src={heroVersion > 0 ? `/hero-photo.jpg?v=${heroVersion}` : "/hero-photo.jpg"}
-                alt=""
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  const el = e.currentTarget as HTMLImageElement;
-                  el.style.opacity = "0";
-                  el.parentElement!.style.background = "rgba(255,255,255,0.1)";
-                }}
-              />
+              {heroImageUrl && (
+                <img key={heroImageUrl} src={heroImageUrl} alt="" className="h-full w-full object-cover" />
+              )}
             </div>
           </div>
         </div>

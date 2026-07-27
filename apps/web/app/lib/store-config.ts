@@ -28,6 +28,7 @@ export type StoreConfig = {
   collection: { label: string; title: string; desc: string };
   footerCta: { title: string; desc: string; btn: string };
   colors: StoreColors;
+  deliveryFeeCents: number;
 };
 
 export const DEFAULT_CONFIG: StoreConfig = {
@@ -71,6 +72,7 @@ export const DEFAULT_CONFIG: StoreConfig = {
     "green-light": "#7ab820",
     "green-bright": "#9ed43a",
   },
+  deliveryFeeCents: 0,
 };
 
 export function getStoreConfig(): StoreConfig {
@@ -86,6 +88,7 @@ export function getStoreConfig(): StoreConfig {
       collection: { ...DEFAULT_CONFIG.collection, ...parsed.collection },
       footerCta: { ...DEFAULT_CONFIG.footerCta, ...parsed.footerCta },
       colors: { ...DEFAULT_CONFIG.colors, ...parsed.colors },
+      deliveryFeeCents: parsed.deliveryFeeCents ?? DEFAULT_CONFIG.deliveryFeeCents,
     };
   } catch {
     return DEFAULT_CONFIG;

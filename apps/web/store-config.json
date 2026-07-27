@@ -1,12 +1,16 @@
 {
   "hero": {
-    "badge": "New Collection 2025",
+    "badge": "New Collection 2026",
     "line1": "Léger.",
     "line2": "Flexible.",
     "line3": "Confortable.",
     "subtitle": "Engineered for everyday comfort without compromising on style. Discover the Flex Comfort Shoes collection.",
     "cta1": "Shop Collection",
     "cta2": "Watch Story"
+  },
+  "photoCard": {
+    "label": "Collection",
+    "year": "2025"
   },
   "usp": [
     {
@@ -48,5 +52,6 @@
     "green-mid": "#5c8c1e",
     "green-light": "#7ab820",
     "green-bright": "#9ed43a"
-  }
+  },
+  "deliveryFeeCents": 700
 }

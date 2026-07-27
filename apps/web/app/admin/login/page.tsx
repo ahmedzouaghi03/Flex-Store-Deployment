@@ -26,7 +26,7 @@ export default function LoginPage() {
         </div>
 
         {/* card */}
-        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-center justify-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-bg)] ring-1 ring-[var(--color-border)]">
               <Lock className="h-5 w-5 text-[var(--color-accent)]" />
@@ -46,14 +46,14 @@ export default function LoginPage() {
           <form action={action} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-[var(--color-text)]">
-                Username
+                Email
               </label>
               <input
-                name="username"
-                type="text"
+                name="email"
+                type="email"
                 required
-                autoComplete="username"
-                placeholder="admin"
+                autoComplete="email"
+                placeholder="admin@example.com"
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none transition focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20"
               />
             </div>
