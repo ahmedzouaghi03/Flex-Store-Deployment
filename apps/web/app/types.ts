@@ -120,6 +120,17 @@ export type SerializedProduct = {
 
 // ─── Order types ──────────────────────────────────────────────────────────────
 
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "PROCESSING"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "RETURNED";
+
+export type DiscountType = "PERCENTAGE" | "FIXED";
+
 export type SerializedOrderItem = {
   id: string;
   variantId: string;
@@ -143,6 +154,9 @@ export type SerializedOrder = {
   city: string | null;
   subtotal: number;
   shippingCost: number;
+  discountType: DiscountType | null;
+  discountValue: number | null;
+  discountAmount: number;
   total: number;
   status: string;
   notes: string | null;
@@ -150,6 +164,11 @@ export type SerializedOrder = {
   items: SerializedOrderItem[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type OrdersPage = {
+  orders: SerializedOrder[];
+  totalCount: number;
 };
 
 export type CreateOrderInput = {
@@ -187,6 +206,9 @@ export type SerializedStoreSettings = {
   heroSubtitle: string | null;
   heroCta1: string | null;
   heroCta2: string | null;
+  heroOverlayCardLabel: string | null;
+  heroOverlayCardYear: string | null;
+  heroOverlayCardCollection: string | null;
   videoUrl: string | null;
   videoSectionLabel: string | null;
   videoSectionTitle: string | null;
