@@ -1,20 +1,8 @@
-import { PrismaClient, Gender } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const nike = await prisma.brand.upsert({
-    where: { slug: "nike" },
-    update: {},
-    create: { name: "Nike", slug: "nike" },
-  });
-
-  const adidas = await prisma.brand.upsert({
-    where: { slug: "adidas" },
-    update: {},
-    create: { name: "Adidas", slug: "adidas" },
-  });
-
   const sneakers = await prisma.category.upsert({
     where: { slug: "sneakers" },
     update: {},
@@ -33,83 +21,111 @@ async function main() {
       slug: "air-stride-runner",
       description:
         "Lightweight everyday runner with responsive cushioning and breathable mesh upper.",
-      priceCents: 12999,
-      compareAtPriceCents: 14999,
+      basePrice: 129.99,
+      isFeatured: true,
+      isPublished: true,
+      categoryId: running.id,
       images: [
         "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80",
         "https://images.unsplash.com/photo-1606107557195-0f41c8383b8c?w=800&q=80",
       ],
-      gender: Gender.MEN,
-      sizes: ["40", "41", "42", "43", "44"],
-      colors: ["Red", "White"],
-      isFeatured: true,
-      brandId: nike.id,
-      categoryIds: [sneakers.id, running.id],
+      colors: [
+        { name: "Red", hex: "#c0392b", sizes: ["40", "41", "42", "43", "44"] },
+        { name: "White", hex: "#f5f5f5", sizes: ["40", "41", "42", "43", "44"] },
+      ],
     },
     {
       name: "Urban Flex Low",
       slug: "urban-flex-low",
       description:
         "Clean low-profile sneaker for casual wear. Soft insole and durable rubber outsole.",
-      priceCents: 8999,
+      basePrice: 89.99,
+      isFeatured: true,
+      isPublished: true,
+      categoryId: sneakers.id,
       images: [
         "https://images.unsplash.com/photo-1608231387042-66d1773070a6?w=800&q=80",
       ],
-      gender: Gender.UNISEX,
-      sizes: ["38", "39", "40", "41", "42", "43"],
-      colors: ["Black", "White"],
-      isFeatured: true,
-      brandId: adidas.id,
-      categoryIds: [sneakers.id],
+      colors: [
+        {
+          name: "Black",
+          hex: "#111111",
+          sizes: ["38", "39", "40", "41", "42", "43"],
+        },
+        {
+          name: "White",
+          hex: "#f5f5f5",
+          sizes: ["38", "39", "40", "41", "42", "43"],
+        },
+      ],
     },
     {
       name: "Trail Grip Pro",
       slug: "trail-grip-pro",
       description:
         "All-terrain shoe with extra grip and ankle support for outdoor trails.",
-      priceCents: 15999,
+      basePrice: 159.99,
+      isFeatured: false,
+      isPublished: true,
+      categoryId: running.id,
       images: [
         "https://images.unsplash.com/photo-1595950653106-6c9ebd614d94?w=800&q=80",
       ],
-      gender: Gender.WOMEN,
-      sizes: ["36", "37", "38", "39", "40"],
-      colors: ["Green", "Black"],
-      brandId: nike.id,
-      categoryIds: [running.id],
+      colors: [
+        { name: "Green", hex: "#4a7018", sizes: ["36", "37", "38", "39", "40"] },
+        { name: "Black", hex: "#111111", sizes: ["36", "37", "38", "39", "40"] },
+      ],
     },
     {
       name: "Classic Court",
       slug: "classic-court",
       description: "Timeless court silhouette with premium leather finish.",
-      priceCents: 10999,
-      compareAtPriceCents: 11999,
+      basePrice: 109.99,
+      isFeatured: false,
+      isPublished: true,
+      categoryId: sneakers.id,
       images: [
         "https://images.unsplash.com/photo-1525966222134-fcfa99b3944a?w=800&q=80",
       ],
-      gender: Gender.MEN,
-      sizes: ["41", "42", "43", "44", "45"],
-      colors: ["White", "Navy"],
-      brandId: adidas.id,
-      categoryIds: [sneakers.id],
+      colors: [
+        {
+          name: "White",
+          hex: "#f5f5f5",
+          sizes: ["41", "42", "43", "44", "45"],
+        },
+        { name: "Navy", hex: "#1a2a4a", sizes: ["41", "42", "43", "44", "45"] },
+      ],
     },
   ];
 
-  for (const p of products) {
-    const { categoryIds, ...data } = p;
-    await prisma.product.upsert({
+  let seeded = 0;
+  for (const { images, colors, ...data } of products) {
+    const existing = await prisma.product.findUnique({
       where: { slug: data.slug },
-      update: {
+    });
+    if (existing) continue;
+
+    await prisma.product.create({
+      data: {
         ...data,
-        categories: { set: categoryIds.map((id) => ({ id })) },
-      },
-      create: {
-        ...data,
-        categories: { connect: categoryIds.map((id) => ({ id })) },
+        images: {
+          create: images.map((url, order) => ({ url, order })),
+        },
+        colors: {
+          create: colors.map((color) => ({
+            name: color.name,
+            hex: color.hex,
+            sizes: {
+              create: color.sizes.map((size) => ({ size, stock: 20 })),
+            },
+          })),
+        },
       },
     });
+    seeded += 1;
   }
 
-  console.log("Seed complete:", products.length, "products");
+  console.log("Seed complete:", seeded, "products created");
 }
 
 main()
