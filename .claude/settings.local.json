@@ -11,7 +11,8 @@
       "Read(//c/c/Users/abdes/OneDrive/Desktop/It Vision/flex/flex-store/apps/web/app/actions/**)",
       "Bash(cd \"/c/Users/abdes/OneDrive/Desktop/It Vision/flex/flex-store\" && grep -n \"isHydrated\" \"apps/web/app/cart-context.tsx\" \"apps/web/app/\\(store\\)/cart/page.tsx\" \"apps/web/app/\\(store\\)/checkout/CheckoutForm.tsx\")",
       "Read(//c/c/Users/abdes/OneDrive/Desktop/It Vision/flex/flex-store/apps/web/app/**)",
-      "Read(//c/Users/abdes/OneDrive/Desktop/It Vision/flex/**)"
+      "Read(//c/Users/abdes/OneDrive/Desktop/It Vision/flex/**)",
+      "Bash(pnpm install *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\abdes\\OneDrive\\Desktop\\It Vision\\flex"
