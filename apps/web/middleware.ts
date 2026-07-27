@@ -22,6 +22,13 @@ async function getAdminPayload(token: string): Promise<{ role: string } | null> 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // shop.<domain> (or shop.localhost in dev) serves the /shop listing at its root.
+  // Generic host check — no env config needed, works the same in prod and locally.
+  const hostname = req.headers.get("host")?.split(":")[0] ?? "";
+  if (hostname.startsWith("shop.") && pathname === "/") {
+    return NextResponse.rewrite(new URL("/shop", req.url));
+  }
+
   if (!pathname.startsWith("/admin")) return NextResponse.next();
   if (pathname === "/admin/login") return NextResponse.next();
 
@@ -39,5 +46,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/", "/admin/:path*"],
 };
