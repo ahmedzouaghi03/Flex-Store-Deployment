@@ -318,8 +318,9 @@ export function OrdersTable({
       )}
 
       <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white print:hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        {/* Desktop table — lg and up */}
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="w-full min-w-[880px] text-sm">
             <thead className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
               <tr>
                 <th className="w-10 px-4 py-3.5">
@@ -419,6 +420,53 @@ export function OrdersTable({
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile/tablet card list — below lg */}
+        <div className="divide-y divide-[var(--color-border)] lg:hidden">
+          {orders.map((order) => {
+            const href = `/admin/orders/${order.orderNumber}`;
+            return (
+              <div key={order.id} className="flex gap-3 p-4">
+                <input
+                  type="checkbox"
+                  checked={selected.has(order.id)}
+                  onChange={() => toggleSelect(order.id)}
+                  className="mt-1 h-4 w-4 shrink-0 rounded accent-[var(--color-accent)]"
+                />
+                <div className="min-w-0 flex-1">
+                  <Link href={href} className="block">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs text-[var(--color-muted)]">
+                        {new Date(order.createdAt).toLocaleDateString("fr-TN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <p className="shrink-0 font-bold text-[var(--color-text)]">{formatPrice(order.total)}</p>
+                    </div>
+                    <p className="font-mono text-xs font-bold text-[var(--color-muted)]">{order.orderNumber}</p>
+                  </Link>
+
+                  <div className="mt-2">
+                    <OrderStatusSelect
+                      key={`${order.id}-${order.status}`}
+                      orderId={order.id}
+                      currentStatus={order.status}
+                    />
+                  </div>
+
+                  <Link href={href} className="mt-2 block">
+                    <p className="truncate text-sm font-semibold text-[var(--color-text)]">
+                      {order.customerName} · {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                    </p>
+                    {order.city && <p className="text-xs text-[var(--color-muted)]">{order.city}</p>}
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Pagination */}

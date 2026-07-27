@@ -178,6 +178,169 @@ export function ProductsTable({ products: initial }: { products: Row[] }) {
     [products, deleteConfirmId],
   );
 
+  // shared render helpers — keep the inline-edit / badges / actions markup identical
+  // between the desktop table row and the mobile card layout below.
+  function renderName(product: Row) {
+    const isEditingName = editing?.id === product.id && editing.field === "name";
+    if (isEditingName) {
+      return (
+        <input
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitEdit();
+            if (e.key === "Escape") cancelEdit();
+          }}
+          onBlur={commitEdit}
+          className="w-full max-w-[200px] rounded-lg border border-[var(--color-accent)] bg-white px-2 py-1 text-sm font-semibold text-[var(--color-text)] outline-none"
+        />
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => startEdit(product, "name")}
+        title="Click to edit"
+        className="group flex items-center gap-1.5 text-left font-semibold text-[var(--color-text)]"
+      >
+        <span className="truncate">{product.name}</span>
+        <Pencil className="h-3 w-3 shrink-0 text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100" />
+      </button>
+    );
+  }
+
+  function renderPrice(product: Row) {
+    const isEditingPrice = editing?.id === product.id && editing.field === "price";
+    if (isEditingPrice) {
+      return (
+        <input
+          autoFocus
+          type="number"
+          min="0"
+          step="0.001"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitEdit();
+            if (e.key === "Escape") cancelEdit();
+          }}
+          onBlur={commitEdit}
+          className="w-24 rounded-lg border border-[var(--color-accent)] bg-white px-2 py-1 text-sm font-semibold text-[var(--color-text)] outline-none"
+        />
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={() => startEdit(product, "price")}
+        title="Click to edit"
+        className="group flex items-center gap-1.5"
+      >
+        {formatPrice(product.priceCents / 100)}
+        <Pencil className="h-3 w-3 shrink-0 text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100" />
+      </button>
+    );
+  }
+
+  function renderColorSwatches(product: Row) {
+    return (
+      <div className="flex gap-1">
+        {product.colorImages.slice(0, 4).map((c, i) =>
+          c.imageUrls[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={c.imageUrls[0]}
+              alt={c.name}
+              title={c.name}
+              className="h-7 w-7 rounded-full border-2 border-white object-cover shadow-sm"
+            />
+          ) : (
+            <span
+              key={i}
+              title={c.name}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] text-[9px] font-bold text-[var(--color-muted)]"
+              style={{ backgroundColor: c.hex }}
+            />
+          ),
+        )}
+        {product.colorImages.length > 4 && (
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg)] text-[9px] font-bold text-[var(--color-muted)]">
+            +{product.colorImages.length - 4}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  function renderStatusBadges(product: Row) {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            product.isPublished ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+          }`}
+        >
+          {product.isPublished ? "Published" : "Draft"}
+        </span>
+        {product.isFeatured && (
+          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+            Featured
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  function renderRowActions(product: Row) {
+    return (
+      <>
+        <Link
+          href={`/admin/products/${product.slug}/edit`}
+          title="Edit shoe"
+          className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-[var(--color-bg)] hover:text-[var(--color-accent)]"
+        >
+          <Pencil className="h-4 w-4" />
+        </Link>
+
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => handleTogglePublished(product)}
+          title={product.isPublished ? "Unpublish" : "Publish"}
+          className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] disabled:opacity-40"
+        >
+          {product.isPublished ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+        </button>
+
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => handleToggleFeatured(product)}
+          title={product.isFeatured ? "Remove from featured" : "Mark as featured"}
+          className={`rounded-lg p-1.5 transition hover:bg-[var(--color-bg)] disabled:opacity-40 ${
+            product.isFeatured
+              ? "text-amber-500 hover:text-amber-600"
+              : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
+          }`}
+        >
+          <Star className="h-4 w-4" fill={product.isFeatured ? "currentColor" : "none"} />
+        </button>
+
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setDeleteConfirmId(product.id)}
+          title="Delete shoe"
+          className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <div className="rounded-2xl border-2 border-dashed border-[var(--color-border)] py-20 text-center">
@@ -259,204 +422,106 @@ export function ProductsTable({ products: initial }: { products: Row[] }) {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
-              <th className="w-10 px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 rounded accent-[var(--color-accent)]"
-                />
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Shoe</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Price</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Colors</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Status</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
-            {products.map((product) => {
-              const thumbnail = thumbnailUrl(product);
-              const isEditingName = editing?.id === product.id && editing.field === "name";
-              const isEditingPrice = editing?.id === product.id && editing.field === "price";
+      {/* Desktop table — lg and up */}
+      <div className="hidden overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-sm lg:block">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded accent-[var(--color-accent)]"
+                  />
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Shoe</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Price</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Colors</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Status</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {products.map((product) => {
+                const thumbnail = thumbnailUrl(product);
 
-              return (
-                <tr key={product.id} className="transition hover:bg-[var(--color-bg)]">
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(product.id)}
-                      onChange={() => toggleSelect(product.id)}
-                      className="h-4 w-4 rounded accent-[var(--color-accent)]"
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      {thumbnail ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={thumbnail}
-                          alt={product.name}
-                          className="h-12 w-12 shrink-0 rounded-xl border border-[var(--color-border)] object-cover"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]" />
-                      )}
-                      {isEditingName ? (
-                        <div className="flex items-center gap-1">
-                          <input
-                            autoFocus
-                            value={draft}
-                            onChange={(e) => setDraft(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") commitEdit();
-                              if (e.key === "Escape") cancelEdit();
-                            }}
-                            onBlur={commitEdit}
-                            className="w-40 rounded-lg border border-[var(--color-accent)] bg-white px-2 py-1 text-sm font-semibold text-[var(--color-text)] outline-none"
-                          />
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => startEdit(product, "name")}
-                          title="Click to edit"
-                          className="group flex items-center gap-1.5 text-left font-semibold text-[var(--color-text)]"
-                        >
-                          {product.name}
-                          <Pencil className="h-3 w-3 shrink-0 text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-semibold text-[var(--color-text)]">
-                    {isEditingPrice ? (
+                return (
+                  <tr key={product.id} className="transition hover:bg-[var(--color-bg)]">
+                    <td className="px-4 py-3">
                       <input
-                        autoFocus
-                        type="number"
-                        min="0"
-                        step="0.001"
-                        value={draft}
-                        onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") commitEdit();
-                          if (e.key === "Escape") cancelEdit();
-                        }}
-                        onBlur={commitEdit}
-                        className="w-24 rounded-lg border border-[var(--color-accent)] bg-white px-2 py-1 text-sm font-semibold text-[var(--color-text)] outline-none"
+                        type="checkbox"
+                        checked={selected.has(product.id)}
+                        onChange={() => toggleSelect(product.id)}
+                        className="h-4 w-4 rounded accent-[var(--color-accent)]"
                       />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => startEdit(product, "price")}
-                        title="Click to edit"
-                        className="group flex items-center gap-1.5"
-                      >
-                        {formatPrice(product.priceCents / 100)}
-                        <Pencil className="h-3 w-3 shrink-0 text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100" />
-                      </button>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      {product.colorImages.slice(0, 4).map((c, i) =>
-                        c.imageUrls[0] ? (
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {thumbnail ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            key={i}
-                            src={c.imageUrls[0]}
-                            alt={c.name}
-                            title={c.name}
-                            className="h-7 w-7 rounded-full border-2 border-white object-cover shadow-sm"
+                            src={thumbnail}
+                            alt={product.name}
+                            className="h-12 w-12 shrink-0 rounded-xl border border-[var(--color-border)] object-cover"
                           />
                         ) : (
-                          <span
-                            key={i}
-                            title={c.name}
-                            className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] text-[9px] font-bold text-[var(--color-muted)]"
-                            style={{ backgroundColor: c.hex }}
-                          />
-                        ),
-                      )}
-                      {product.colorImages.length > 4 && (
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg)] text-[9px] font-bold text-[var(--color-muted)]">
-                          +{product.colorImages.length - 4}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          product.isPublished
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {product.isPublished ? "Published" : "Draft"}
-                      </span>
-                      {product.isFeatured && (
-                        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Link
-                        href={`/admin/products/${product.slug}/edit`}
-                        title="Edit shoe"
-                        className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-[var(--color-bg)] hover:text-[var(--color-accent)]"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Link>
+                          <div className="h-12 w-12 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]" />
+                        )}
+                        {renderName(product)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-[var(--color-text)]">{renderPrice(product)}</td>
+                    <td className="px-4 py-3">{renderColorSwatches(product)}</td>
+                    <td className="px-4 py-3">{renderStatusBadges(product)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">{renderRowActions(product)}</div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => handleTogglePublished(product)}
-                        title={product.isPublished ? "Unpublish" : "Publish"}
-                        className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] disabled:opacity-40"
-                      >
-                        {product.isPublished ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => handleToggleFeatured(product)}
-                        title={product.isFeatured ? "Remove from featured" : "Mark as featured"}
-                        className={`rounded-lg p-1.5 transition hover:bg-[var(--color-bg)] disabled:opacity-40 ${
-                          product.isFeatured
-                            ? "text-amber-500 hover:text-amber-600"
-                            : "text-[var(--color-muted)] hover:text-[var(--color-text)]"
-                        }`}
-                      >
-                        <Star className="h-4 w-4" fill={product.isFeatured ? "currentColor" : "none"} />
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => setDeleteConfirmId(product.id)}
-                        title="Delete shoe"
-                        className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Mobile/tablet card list — below lg */}
+      <div className="divide-y divide-[var(--color-border)] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-sm lg:hidden">
+        {products.map((product) => {
+          const thumbnail = thumbnailUrl(product);
+          return (
+            <div key={product.id} className="flex gap-3 p-4">
+              <input
+                type="checkbox"
+                checked={selected.has(product.id)}
+                onChange={() => toggleSelect(product.id)}
+                className="mt-1 h-4 w-4 shrink-0 rounded accent-[var(--color-accent)]"
+              />
+              {thumbnail ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={thumbnail}
+                  alt={product.name}
+                  className="h-14 w-14 shrink-0 rounded-xl border border-[var(--color-border)] object-cover"
+                />
+              ) : (
+                <div className="h-14 w-14 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]" />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">{renderName(product)}</div>
+                  <div className="flex shrink-0 items-center gap-1">{renderRowActions(product)}</div>
+                </div>
+                <div className="mt-1 text-sm">{renderPrice(product)}</div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {renderColorSwatches(product)}
+                  {renderStatusBadges(product)}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {deletingProduct && (
