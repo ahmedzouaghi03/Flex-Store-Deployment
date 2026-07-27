@@ -1,17 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle2, Package, UserPlus } from "lucide-react";
+import { CheckCircle2, Package, UserPlus, ClipboardList } from "lucide-react";
 import { getOrderByNumber } from "@/actions/orderActions";
 import { formatPrice } from "@/lib/utils";
+import { getCurrentUser } from "@/lib/session";
 
 type SearchParams = Promise<{ ref?: string; name?: string; email?: string }>;
 
 export default async function SuccessPage({ searchParams }: { searchParams: SearchParams }) {
   const { ref, name, email } = await searchParams;
 
-  const order = ref
-    ? await getOrderByNumber(ref).then((r) => (r.success ? r.data : null))
-    : null;
+  const [order, user] = await Promise.all([
+    ref ? getOrderByNumber(ref).then((r) => (r.success ? r.data : null)) : Promise.resolve(null),
+    getCurrentUser(),
+  ]);
 
   const displayName = order?.customerName ?? name ?? "there";
   const orderRef = order?.orderNumber ?? ref;
@@ -91,33 +93,56 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
         </div>
       )}
 
-      {/* Create account CTA */}
-      <div className="rounded-2xl border-2 border-dashed border-[var(--color-accent)]/40 bg-[var(--color-accent)]/5 p-6 text-center space-y-3">
-        <div className="flex justify-center">
-          <div className="rounded-full bg-[var(--color-accent)]/10 p-2.5">
-            <UserPlus size={20} className="text-[var(--color-accent)]" />
+      {/* Account CTA — differs for logged-in vs. guest customers */}
+      {user ? (
+        <div className="rounded-2xl border-2 border-dashed border-[var(--color-accent)]/40 bg-[var(--color-accent)]/5 p-6 text-center space-y-3">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-[var(--color-accent)]/10 p-2.5">
+              <ClipboardList size={20} className="text-[var(--color-accent)]" />
+            </div>
           </div>
+          <div>
+            <p className="font-bold text-[var(--color-text)]">Track this order</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">
+              Follow its status and see your full purchase history from your account.
+            </p>
+          </div>
+          <Link
+            href="/account"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)]"
+          >
+            <ClipboardList size={15} />
+            View My Orders
+          </Link>
         </div>
-        <div>
-          <p className="font-bold text-[var(--color-text)]">Track your order anytime</p>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Create a free account to follow your order status, view your purchase history, and get notified on updates.
+      ) : (
+        <div className="rounded-2xl border-2 border-dashed border-[var(--color-accent)]/40 bg-[var(--color-accent)]/5 p-6 text-center space-y-3">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-[var(--color-accent)]/10 p-2.5">
+              <UserPlus size={20} className="text-[var(--color-accent)]" />
+            </div>
+          </div>
+          <div>
+            <p className="font-bold text-[var(--color-text)]">Track your order anytime</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">
+              Create a free account to follow your order status, view your purchase history, and get notified on updates.
+            </p>
+          </div>
+          <Link
+            href={`/account/register${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)]"
+          >
+            <UserPlus size={15} />
+            Create Account
+          </Link>
+          <p className="text-xs text-[var(--color-muted)]">
+            Already have an account?{" "}
+            <Link href="/account/login" className="font-semibold text-[var(--color-accent)] hover:underline">
+              Sign in
+            </Link>
           </p>
         </div>
-        <Link
-          href={`/account/register${email ? `?email=${encodeURIComponent(email)}` : ""}`}
-          className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)]"
-        >
-          <UserPlus size={15} />
-          Create Account
-        </Link>
-        <p className="text-xs text-[var(--color-muted)]">
-          Already have an account?{" "}
-          <Link href="/account/login" className="font-semibold text-[var(--color-accent)] hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="flex justify-center gap-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Sparkles, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -40,6 +40,7 @@ export function CheckoutForm({ prefill }: { prefill: Prefill }) {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [modal, setModal] = useState<{ orderNumber: string; orderId: string } | null>(null);
+  const orderPlacedRef = useRef(false);
 
   const pastAddresses = prefill?.pastAddresses ?? [];
   const [selectedAddressKey, setSelectedAddressKey] = useState(
@@ -65,7 +66,9 @@ export function CheckoutForm({ prefill }: { prefill: Prefill }) {
   }
 
   useEffect(() => {
-    if (isHydrated && items.length === 0 && !modal) router.replace("/cart");
+    if (isHydrated && items.length === 0 && !modal && !orderPlacedRef.current) {
+      router.replace("/cart");
+    }
   }, [isHydrated, items.length, modal, router]);
 
   if (!isHydrated) return null;
@@ -103,6 +106,7 @@ export function CheckoutForm({ prefill }: { prefill: Prefill }) {
           setSubmitting(false);
           return;
         }
+        orderPlacedRef.current = true;
         clearCart();
         const { orderNumber, orderId } = result.data!;
         if (prefill) {
