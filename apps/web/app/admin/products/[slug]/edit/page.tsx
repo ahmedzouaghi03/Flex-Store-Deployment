@@ -1,9 +1,20 @@
-import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-import { getProductForEdit } from "@/actions/adminActions";
-import { ProductForm } from "@/components/admin/ProductForm";
+import { Skeleton } from "@/components/admin/Skeleton";
+import { EditProductContent } from "./EditProductContent";
+
+function ProductFormSkeleton() {
+  return (
+    <div className="max-w-2xl space-y-8">
+      <Skeleton className="h-11 w-full rounded-xl" />
+      <Skeleton className="h-11 w-full rounded-xl" />
+      <Skeleton className="h-40 w-full rounded-2xl" />
+      <Skeleton className="h-64 w-full rounded-2xl" />
+    </div>
+  );
+}
 
 export default async function EditProductPage({
   params,
@@ -11,11 +22,6 @@ export default async function EditProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const result = await getProductForEdit(slug);
-
-  if (!result.success || !result.data) {
-    notFound();
-  }
 
   return (
     <div>
@@ -30,7 +36,10 @@ export default async function EditProductPage({
       <p className="mb-8 text-sm text-[var(--color-muted)]">
         Update the details below and click &quot;Save Changes&quot;.
       </p>
-      <ProductForm initialData={result.data} />
+
+      <Suspense fallback={<ProductFormSkeleton />}>
+        <EditProductContent slug={slug} />
+      </Suspense>
     </div>
   );
 }

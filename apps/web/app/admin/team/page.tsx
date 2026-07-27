@@ -1,18 +1,23 @@
-import { getCurrentUser } from "@/lib/session";
-import { getTeamMembers } from "@/actions/teamActions";
-import { TeamClient } from "@/components/admin/TeamClient";
+import { Suspense } from "react";
+import { Skeleton, CardListSkeleton } from "@/components/admin/Skeleton";
+import { TeamContent } from "./TeamContent";
 
-export default async function TeamPage() {
-  const [user, result] = await Promise.all([getCurrentUser(), getTeamMembers()]);
-
-  const members = result.success ? result.data! : [];
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
-
+export default function TeamPage() {
   return (
-    <TeamClient
-      members={members}
-      currentUserId={user?.id ?? ""}
-      isSuperAdmin={isSuperAdmin}
-    />
+    <div className="space-y-6">
+      {/* header — renders instantly, independent of the DB fetch below */}
+      <h1 className="text-2xl font-bold text-[var(--color-text)]">Team</h1>
+
+      <Suspense
+        fallback={
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-56" />
+            <CardListSkeleton rows={4} />
+          </div>
+        }
+      >
+        <TeamContent />
+      </Suspense>
+    </div>
   );
 }
