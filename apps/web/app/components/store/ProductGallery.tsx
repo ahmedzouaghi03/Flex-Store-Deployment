@@ -1,22 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SerializedProductColor } from "@/types";
 
 type Props = {
   colors: SerializedProductColor[];
   productName: string;
   mainImages?: string[];
+  selectedColor: SerializedProductColor | null;
 };
 
-export function ProductGallery({ colors, productName, mainImages = [] }: Props) {
-  const [activeColor, setActiveColor] = useState<SerializedProductColor | null>(null);
+export function ProductGallery({ colors, productName, mainImages = [], selectedColor }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const displayImages = (() => {
-    if (activeColor) {
-      return activeColor.images.length > 0
-        ? activeColor.images.map((i) => i.url)
+    if (selectedColor) {
+      return selectedColor.images.length > 0
+        ? selectedColor.images.map((i) => i.url)
         : mainImages;
     }
     return mainImages.length > 0
@@ -26,19 +26,10 @@ export function ProductGallery({ colors, productName, mainImages = [] }: Props) 
 
   const mainSrc = displayImages[activeIndex] ?? displayImages[0];
 
-  function selectColor(color: SerializedProductColor) {
-    if (activeColor?.id === color.id) {
-      setActiveColor(null);
-      setActiveIndex(0);
-    } else {
-      setActiveColor(color);
-      setActiveIndex(0);
-    }
-  }
-
-  const hasMainImages = mainImages.length > 0;
-  const hasColors = colors.length > 0;
-  const showCircleRow = hasMainImages || hasColors;
+  // jump back to the first photo whenever the selected color changes
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [selectedColor?.id]);
 
   return (
     <div className="space-y-3">
@@ -48,7 +39,7 @@ export function ProductGallery({ colors, productName, mainImages = [] }: Props) 
           <img
             key={mainSrc}
             src={mainSrc}
-            alt={activeColor ? `${productName} — ${activeColor.name}` : productName}
+            alt={selectedColor ? `${productName} — ${selectedColor.name}` : productName}
             className="h-full w-full object-cover"
           />
         ) : (
@@ -57,15 +48,15 @@ export function ProductGallery({ colors, productName, mainImages = [] }: Props) 
           </div>
         )}
 
-        {activeColor && (
+        {selectedColor && (
           <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1 backdrop-blur-sm">
-            {activeColor.hex && (
+            {selectedColor.hex && (
               <div
                 className="h-3 w-3 rounded-full border border-white/40"
-                style={{ backgroundColor: activeColor.hex }}
+                style={{ backgroundColor: selectedColor.hex }}
               />
             )}
-            <span className="text-xs font-semibold text-white">{activeColor.name}</span>
+            <span className="text-xs font-semibold text-white">{selectedColor.name}</span>
           </div>
         )}
       </div>
@@ -86,70 +77,6 @@ export function ProductGallery({ colors, productName, mainImages = [] }: Props) 
               <img src={src} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
-        </div>
-      )}
-
-      {/* Circle row: Main + Colors */}
-      {showCircleRow && (
-        <div className="flex items-start gap-4">
-          {/* Main photos circle */}
-          {hasMainImages && (
-            <button
-              onClick={() => { setActiveColor(null); setActiveIndex(0); }}
-              className="flex flex-col items-center gap-1"
-              title="Main photos"
-            >
-              <div
-                className={`h-8 w-8 overflow-hidden rounded-full border-2 shadow-sm transition-all ${
-                  activeColor === null
-                    ? "scale-110 border-[var(--color-accent)] shadow-md"
-                    : "border-[var(--color-border)] hover:scale-110 hover:border-[var(--color-accent)]/50"
-                }`}
-              >
-                {mainImages[0] ? (
-                  <img src={mainImages[0]} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-[var(--color-bg)]" />
-                )}
-              </div>
-              <span
-                className={`text-[9px] font-medium ${
-                  activeColor === null ? "text-[var(--color-accent)]" : "text-[var(--color-muted)]"
-                }`}
-              >
-                Main
-              </span>
-            </button>
-          )}
-
-          {/* Color circles */}
-          {colors.map((color) => {
-            const isActive = activeColor?.id === color.id;
-            return (
-              <button
-                key={color.id}
-                onClick={() => selectColor(color)}
-                title={color.name}
-                className="flex flex-col items-center gap-1"
-              >
-                <div
-                  className={`h-8 w-8 rounded-full border-2 shadow-sm transition-all ${
-                    isActive
-                      ? "scale-110 border-[var(--color-accent)] shadow-md"
-                      : "border-[var(--color-border)] hover:scale-110 hover:border-[var(--color-accent)]/50"
-                  }`}
-                  style={{ backgroundColor: color.hex ?? "#888" }}
-                />
-                <span
-                  className={`max-w-[40px] text-center text-[9px] font-medium leading-tight ${
-                    isActive ? "text-[var(--color-accent)]" : "text-[var(--color-muted)]"
-                  }`}
-                >
-                  {color.name}
-                </span>
-              </button>
-            );
-          })}
         </div>
       )}
     </div>

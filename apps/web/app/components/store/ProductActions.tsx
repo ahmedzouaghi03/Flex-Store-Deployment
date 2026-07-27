@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShoppingCart, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/cart-context";
@@ -11,7 +11,7 @@ interface ProductActionsProps {
   productSlug: string;
   productName: string;
   basePrice: number;
-  colors: SerializedProductColor[];
+  selectedColor: SerializedProductColor | null;
 }
 
 export function ProductActions({
@@ -19,14 +19,11 @@ export function ProductActions({
   productSlug,
   productName,
   basePrice,
-  colors,
+  selectedColor,
 }: ProductActionsProps) {
   const { addItem } = useCart();
   const t = useTranslations("Product");
 
-  const [selectedColor, setSelectedColor] = useState<SerializedProductColor | null>(
-    colors.length > 0 ? colors[0] : null,
-  );
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -40,11 +37,11 @@ export function ProductActions({
   const maxQty = availableStock ?? 99;
   const lowStock = availableStock !== null && availableStock > 0 && availableStock <= 3;
 
-  function selectColor(color: SerializedProductColor) {
-    setSelectedColor(color);
+  // reset size/quantity whenever the shared color selection changes
+  useEffect(() => {
     setSelectedSize(null);
     setQty(1);
-  }
+  }, [selectedColor?.id]);
 
   function selectSize(size: string) {
     setSelectedSize(size);
@@ -75,31 +72,6 @@ export function ProductActions({
 
   return (
     <div className="space-y-6">
-      {/* Colors */}
-      {colors.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
-            {t("Color")}{selectedColor ? `: ${selectedColor.name}` : ""}
-          </h2>
-          <div className="flex flex-wrap gap-2.5">
-            {colors.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => selectColor(c)}
-                title={c.name}
-                className={`h-8 w-8 rounded-full border-2 transition-transform ${
-                  selectedColor?.id === c.id
-                    ? "border-[var(--color-accent)] scale-110 shadow-md"
-                    : "border-transparent hover:scale-105 hover:border-[var(--color-border)]"
-                }`}
-                style={{ backgroundColor: c.hex ?? "#888" }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Sizes */}
       {sizes.length > 0 && (
         <div>
