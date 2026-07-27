@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2, Link as LinkIcon, Upload, Copy } from "lucide-react";
+import { Plus, X, Loader2, Link as LinkIcon, Upload, Copy, Images } from "lucide-react";
 
 import { createProduct, updateProduct } from "@/actions/adminActions";
+import { ImagePickerModal } from "./ImagePickerModal";
 import type { AdminProductDetail } from "@/types";
 
 type SizeEntry = { size: string; stock: number };
@@ -234,6 +235,42 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
 
   const colorFileRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
+  // ── Reuse-existing-image picker ──────────────────────────────────────────
+  // "main" targets the main product photos list; any other value is a color row id.
+  const [pickerTarget, setPickerTarget] = useState<"main" | string | null>(null);
+
+  const allUploadedImages = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const url of [...mainImages, ...colorRows.flatMap((r) => r.imageUrls)]) {
+      if (!seen.has(url)) {
+        seen.add(url);
+        out.push(url);
+      }
+    }
+    return out;
+  }, [mainImages, colorRows]);
+
+  const pickerAlreadySelected =
+    pickerTarget === "main"
+      ? mainImages
+      : (colorRows.find((r) => r.id === pickerTarget)?.imageUrls ?? []);
+
+  function handlePickerConfirm(urls: string[]) {
+    if (pickerTarget === "main") {
+      setMainImages((prev) => [...prev, ...urls.filter((u) => !prev.includes(u))]);
+    } else if (pickerTarget) {
+      const targetId = pickerTarget;
+      setColorRows((prev) =>
+        prev.map((r) =>
+          r.id === targetId
+            ? { ...r, imageUrls: [...r.imageUrls, ...urls.filter((u) => !r.imageUrls.includes(u))] }
+            : r,
+        ),
+      );
+    }
+  }
+
   // ── Color helpers ────────────────────────────────────────────────────────
   function updateColor(rowId: string, patch: Partial<ColorRow>) {
     setColorRows((prev) => prev.map((r) => (r.id === rowId ? { ...r, ...patch } : r)));
@@ -350,6 +387,7 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-8">
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
@@ -408,6 +446,15 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
             className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
           >
             {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            type="button"
+            disabled={uploading || allUploadedImages.length === 0}
+            onClick={() => setPickerTarget("main")}
+            title="Choose from already uploaded images"
+            className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+          >
+            <Images className="h-3.5 w-3.5" />
           </button>
         </div>
 
@@ -521,6 +568,15 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
                 >
                   {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 </button>
+                <button
+                  type="button"
+                  disabled={uploading || allUploadedImages.length === 0}
+                  onClick={() => setPickerTarget(row.id)}
+                  title="Choose from already uploaded images"
+                  className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-[var(--color-border)] bg-white px-2.5 py-2 text-xs font-semibold hover:bg-[var(--color-bg)] transition disabled:opacity-40"
+                >
+                  <Images className="h-3.5 w-3.5" />
+                </button>
               </div>
               {row.imageUrls.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -608,5 +664,15 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
         </a>
       </div>
     </form>
+
+    {pickerTarget !== null && (
+      <ImagePickerModal
+        images={allUploadedImages}
+        alreadySelected={pickerAlreadySelected}
+        onConfirm={handlePickerConfirm}
+        onClose={() => setPickerTarget(null)}
+      />
+    )}
+    </>
   );
 }
