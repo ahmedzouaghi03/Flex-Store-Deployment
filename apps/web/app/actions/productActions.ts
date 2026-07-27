@@ -141,6 +141,23 @@ export async function getProductBySlug(slug: string): Promise<ActionResult<Seria
   }
 }
 
+export async function getProductColors(
+  productId: string,
+): Promise<ActionResult<SerializedProductColor[]>> {
+  if (!productId) return { success: false, error: "Product not found" };
+  try {
+    const product = await db.product.findUnique({
+      where: { id: productId },
+      select: { colors: PRODUCT_INCLUDE.colors },
+    });
+    if (!product) return { success: false, error: "Product not found" };
+    return { success: true, data: product.colors.map(serializeColor) };
+  } catch (error) {
+    console.error("[PRODUCTS] colors error:", error);
+    return { success: false, error: "Failed to load product options" };
+  }
+}
+
 export async function getCategories(): Promise<
   ActionResult<{ id: string; name: string; slug: string }[]>
 > {

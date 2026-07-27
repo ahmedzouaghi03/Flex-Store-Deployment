@@ -15,6 +15,7 @@ type CartCtx = {
   addItem: (item: Omit<CartItem, "id"> & { quantity?: number }) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
+  changeVariant: (oldId: string, next: Omit<CartItem, "id"> & { quantity: number }) => void;
   clearCart: () => void;
 };
 
@@ -29,6 +30,7 @@ const CartContext = createContext<CartCtx>({
   addItem: () => {},
   removeItem: () => {},
   updateQty: () => {},
+  changeVariant: () => {},
   clearCart: () => {},
 });
 
@@ -39,6 +41,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   function addItem(raw: Omit<CartItem, "id"> & { quantity?: number }) {
     store.addItem({ ...raw, id: raw.variantId, quantity: raw.quantity ?? 1 });
     setDrawerOpen(true);
+  }
+
+  function changeVariant(oldId: string, next: Omit<CartItem, "id"> & { quantity: number }) {
+    store.changeVariant(oldId, { ...next, id: next.variantId });
   }
 
   const total = store.items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
@@ -56,6 +62,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem,
         removeItem: store.removeItem,
         updateQty: store.updateQuantity,
+        changeVariant,
         clearCart: store.clearCart,
       }}
     >

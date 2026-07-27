@@ -4,6 +4,7 @@ import Link from "next/link";
 import { X, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useCart } from "@/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { CartItemVariantEditor } from "./CartItemVariantEditor";
 
 export function CartDrawer() {
   const { items, count, total, drawerOpen, closeDrawer, updateQty, removeItem } = useCart();
@@ -85,6 +86,9 @@ export function CartDrawer() {
                     <p className="mt-1 text-sm font-bold text-[var(--color-text)]">
                       {formatPrice(item.unitPrice)}
                     </p>
+                    <div className="mt-1">
+                      <CartItemVariantEditor item={item} />
+                    </div>
 
                     <div className="mt-2 flex items-center justify-between">
                       <div className="flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-white">

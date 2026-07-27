@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useCart } from "@/cart-context";
 import { formatPrice } from "@/lib/utils";
 import { getDeliveryFee } from "@/actions/storeSettingsActions";
+import { CartItemVariantEditor } from "@/components/store/CartItemVariantEditor";
 
 export default function CartPage() {
   const { items, total, updateQty, removeItem, isHydrated } = useCart();
@@ -83,6 +84,9 @@ export default function CartPage() {
                           {item.colorName}
                         </span>
                       )}
+                    </div>
+                    <div className="mt-1.5">
+                      <CartItemVariantEditor item={item} />
                     </div>
                   </div>
                   <button

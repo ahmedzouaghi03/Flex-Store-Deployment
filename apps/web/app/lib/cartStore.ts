@@ -9,6 +9,7 @@ type CartState = {
   addItem: (item: CartItem) => void;
   removeItem: (variantId: string) => void;
   updateQuantity: (variantId: string, quantity: number) => void;
+  changeVariant: (oldVariantId: string, next: CartItem) => void;
   clearCart: () => void;
 };
 
@@ -49,6 +50,22 @@ export const useCartStore = create<CartState>()(
               i.variantId === variantId ? { ...i, quantity } : i,
             ),
           };
+        }),
+
+      changeVariant: (oldVariantId, next) =>
+        set((state) => {
+          const withoutOld = state.items.filter((i) => i.variantId !== oldVariantId);
+          const existing = withoutOld.find((i) => i.variantId === next.variantId);
+          if (existing) {
+            return {
+              items: withoutOld.map((i) =>
+                i.variantId === next.variantId
+                  ? { ...i, quantity: i.quantity + next.quantity }
+                  : i,
+              ),
+            };
+          }
+          return { items: [...withoutOld, next] };
         }),
 
       clearCart: () => set({ items: [] }),
