@@ -65,9 +65,9 @@ function ContactRow({ contact, onUpdate }: { contact: Contact; onUpdate: (id: st
               </span>
             )}
           </div>
-          <p className="text-sm text-[var(--color-muted)]">{contact.email}</p>
+          <p className="break-all text-sm text-[var(--color-muted)]">{contact.email}</p>
           {contact.subject && (
-            <p className="mt-0.5 text-sm font-medium text-[var(--color-text)]">{contact.subject}</p>
+            <p className="mt-0.5 break-words text-sm font-medium text-[var(--color-text)]">{contact.subject}</p>
           )}
           <p className="mt-1 text-xs text-[var(--color-muted)]">
             {new Date(contact.createdAt).toLocaleDateString("fr-TN", {
@@ -86,7 +86,7 @@ function ContactRow({ contact, onUpdate }: { contact: Contact; onUpdate: (id: st
         </div>
 
         {/* Actions */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             onClick={toggleRead}
             disabled={isPending}
