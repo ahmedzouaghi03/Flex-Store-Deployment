@@ -48,7 +48,7 @@ export default async function OrderDetailPage({ params }: Props) {
   return (
     <div className="space-y-6">
       {/* Header — the order number comes straight from the URL, no DB wait needed */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         <Link
           href="/admin/orders"
           className="flex items-center gap-1.5 text-sm text-[var(--color-muted)] transition hover:text-[var(--color-text)]"
@@ -57,7 +57,7 @@ export default async function OrderDetailPage({ params }: Props) {
           Orders
         </Link>
         <span className="text-[var(--color-border)]">/</span>
-        <span className="font-mono text-sm font-bold text-[var(--color-text)]">{publicId}</span>
+        <span className="font-mono text-sm font-bold text-[var(--color-text)] break-all">{publicId}</span>
       </div>
 
       <h1 className="text-2xl font-bold text-[var(--color-text)]">Order {publicId}</h1>

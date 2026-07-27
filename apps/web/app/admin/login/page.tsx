@@ -26,7 +26,7 @@ export default function LoginPage() {
         </div>
 
         {/* card */}
-        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-center justify-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-bg)] ring-1 ring-[var(--color-border)]">
               <Lock className="h-5 w-5 text-[var(--color-accent)]" />
