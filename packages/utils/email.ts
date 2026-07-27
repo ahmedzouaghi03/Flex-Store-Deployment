@@ -69,13 +69,15 @@ export async function sendContactFormEmail({
   subject,
   message,
 }: {
-  recipient: string;
+  recipient: string | string[];
   name: string;
   email: string;
-  phone: string;
-  subject: string;
+  phone?: string;
+  subject?: string;
   message: string;
 }) {
+  const displaySubject = subject?.trim() || "General Inquiry";
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -85,18 +87,18 @@ export async function sendContactFormEmail({
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:20px;overflow:hidden;">
         <tr>
           <td style="padding:32px;background:linear-gradient(135deg,#1a3406,#4a7018 50%,#7ab820);color:#fff;">
-            <div style="font-size:22px;font-weight:700;">New Contact — ${subject}</div>
+            <div style="font-size:22px;font-weight:700;">New Contact — ${displaySubject}</div>
           </td>
         </tr>
         <tr>
           <td style="padding:28px 32px;">
             <p><strong>Name:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Phone:</strong> ${phone}</p>
-            <p><strong>Subject:</strong> ${subject}</p>
+            ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}
+            <p><strong>Subject:</strong> ${displaySubject}</p>
             <div style="padding:20px;border:1px solid #d6e8b8;border-radius:12px;background:#f4f7ee;white-space:pre-line;">${message}</div>
             <div style="margin-top:20px;">
-              <a href="mailto:${email}?subject=Re: ${subject}" style="display:inline-block;background:linear-gradient(135deg,#4a7018,#5c8c1e);color:#fff;text-decoration:none;padding:12px 28px;border-radius:12px;font-weight:600;">
+              <a href="mailto:${email}?subject=Re: ${displaySubject}" style="display:inline-block;background:linear-gradient(135deg,#4a7018,#5c8c1e);color:#fff;text-decoration:none;padding:12px 28px;border-radius:12px;font-weight:600;">
                 Reply to ${name.split(" ")[0]}
               </a>
             </div>
@@ -114,7 +116,7 @@ export async function sendContactFormEmail({
     from: "Flex <onboarding@resend.dev>",
     to: recipient,
     replyTo: email,
-    subject: `[Flex] ${subject} — from ${name}`,
+    subject: `[Flex] ${displaySubject} — from ${name}`,
     html,
   });
 }

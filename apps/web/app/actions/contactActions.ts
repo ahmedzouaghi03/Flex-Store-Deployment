@@ -2,6 +2,7 @@
 
 import { db } from "@shoestore/db";
 import { getCurrentUser } from "@/lib/session";
+import { sendContactFormEmail } from "@shoestore/utils/email";
 
 export type ContactInput = {
   name: string;
@@ -30,11 +31,33 @@ export async function submitContact(
       },
     });
 
+    // best-effort — the submission is already saved, so an email hiccup shouldn't fail the request.
+    // awaited (not fire-and-forget) so serverless runtimes don't tear down before the send completes.
+    await notifySuperAdmins(data).catch((error) => {
+      console.error("[CONTACT] failed to notify admins:", error);
+    });
+
     return { success: true };
   } catch (error) {
     console.error("[CONTACT]", error);
     return { success: false, error: "Failed to send message. Please try again." };
   }
+}
+
+async function notifySuperAdmins(data: ContactInput) {
+  const admins = await db.user.findMany({
+    where: { role: "SUPER_ADMIN", isDeleted: false },
+    select: { email: true },
+  });
+  if (admins.length === 0) return;
+
+  await sendContactFormEmail({
+    recipient: admins.map((a) => a.email),
+    name: data.name.trim(),
+    email: data.email.trim(),
+    subject: data.subject?.trim(),
+    message: data.message.trim(),
+  });
 }
 
 export async function getContacts(opts?: { unreadOnly?: boolean }) {
@@ -61,6 +84,17 @@ export async function markContactRead(
 ): Promise<{ success: boolean }> {
   try {
     await db.contactSubmission.update({ where: { id }, data: { isRead } });
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
+// bulk-clears the "new" indicator — called when the admin opens the Contacts inbox.
+// individual messages can still be flagged back to unread afterward via markContactRead.
+export async function markAllContactsRead(): Promise<{ success: boolean }> {
+  try {
+    await db.contactSubmission.updateMany({ where: { isRead: false }, data: { isRead: true } });
     return { success: true };
   } catch {
     return { success: false };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, CheckCircle2, Send } from "lucide-react";
+import { Loader2, CheckCircle2, Send, RotateCcw } from "lucide-react";
 import { submitContact } from "@/actions/contactActions";
 
 const inp =
@@ -29,11 +29,20 @@ export function ContactForm() {
     });
   }
 
+  function resetForm() {
+    setName("");
+    setEmail("");
+    setSubject("");
+    setMessage("");
+    setError("");
+    setSent(false);
+  }
+
   if (sent) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-2xl border border-[var(--color-border)] bg-white p-10 text-center shadow-sm">
-        <div className="rounded-full bg-emerald-50 p-3">
-          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+        <div className="rounded-full bg-[var(--color-green-bright)] p-3">
+          <CheckCircle2 className="h-8 w-8 text-[var(--color-accent)]" />
         </div>
         <div>
           <h3 className="text-lg font-bold text-[var(--color-text)]">Message sent!</h3>
@@ -41,6 +50,14 @@ export function ContactForm() {
             Thanks {name.split(" ")[0]}! We&apos;ll get back to you soon.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={resetForm}
+          className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-bg)]"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Send Another Message
+        </button>
       </div>
     );
   }
