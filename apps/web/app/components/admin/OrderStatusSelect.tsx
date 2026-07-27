@@ -9,6 +9,7 @@ const STATUSES = [
   { value: "SHIPPED",   label: "Shipped",   color: "text-purple-700 bg-purple-50 border-purple-200" },
   { value: "DELIVERED", label: "Delivered", color: "text-green-700 bg-green-50 border-green-200" },
   { value: "CANCELLED", label: "Cancelled", color: "text-red-700 bg-red-50 border-red-200" },
+  { value: "RETURNED",  label: "Returned",  color: "text-orange-700 bg-orange-50 border-orange-200" },
 ] as const;
 
 type Status = (typeof STATUSES)[number]["value"];
