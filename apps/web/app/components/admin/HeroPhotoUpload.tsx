@@ -138,7 +138,7 @@ export function HeroPhotoUpload({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">
               Label (eyebrow)
@@ -161,7 +161,7 @@ export function HeroPhotoUpload({
               className={inp}
             />
           </div>
-          <div className="col-span-2 space-y-1.5">
+          <div className="sm:col-span-2 space-y-1.5">
             <label className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">
               Collection name (optional)
             </label>

@@ -162,7 +162,7 @@ function SizesEditor({
             }
           }}
           placeholder="Size (e.g. 39, 40, 41…) then Enter"
-          className={`${inp} py-2 text-xs flex-1`}
+          className={`${inp} min-w-0 py-2 text-xs flex-1`}
         />
         <button
           type="button"
@@ -413,7 +413,7 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
         </div>
 
         <div className="flex gap-2">
-          <div className="relative flex-1">
+          <div className="relative min-w-0 flex-1">
             <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted)]" />
             <input
               value={mainUrlInput}
@@ -519,7 +519,7 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
                   updateColor(row.id, { name: n, ...(detectedHex ? { hex: detectedHex } : {}) });
                 }}
                 placeholder="Color name (e.g. Noir, Camel, Bordeaux…)"
-                className={`${inp} flex-1`}
+                className={`${inp} min-w-0 flex-1`}
               />
               <button
                 type="button"
@@ -534,7 +534,7 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
             <div className="space-y-2">
               <p className="text-xs font-semibold text-[var(--color-muted)] uppercase tracking-wide">Photos</p>
               <div className="flex gap-2">
-                <div className="relative flex-1">
+                <div className="relative min-w-0 flex-1">
                   <LinkIcon className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted)]" />
                   <input
                     value={row.urlInput}
@@ -650,7 +650,7 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
       </div>
 
       {/* Submit */}
-      <div className="flex items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-3 pt-2">
         <button
           type="submit"
           disabled={submitting || uploading}

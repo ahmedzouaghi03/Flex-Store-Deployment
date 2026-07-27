@@ -313,7 +313,7 @@ export function StoreSettingsClient({
   return (
     <div className="space-y-8">
       {/* reset bar */}
-      <div className="flex items-center justify-between rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4 shadow-sm">
         <div>
           <p className="text-sm font-semibold text-[var(--color-text)]">Reset store content</p>
           <p className="text-xs text-[var(--color-muted)]">

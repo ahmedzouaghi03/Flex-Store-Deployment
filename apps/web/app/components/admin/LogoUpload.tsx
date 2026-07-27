@@ -37,7 +37,7 @@ export function LogoUpload({
   }
 
   return (
-    <div className="flex items-start gap-6">
+    <div className="flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
       {/* preview box */}
       <div className="relative flex h-20 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
         {url && !imgFailed ? (

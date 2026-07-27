@@ -70,7 +70,7 @@ export function AddOrderItemModal({
           </button>
         </div>
 
-        <div className="max-h-[65vh] space-y-4 overflow-y-auto p-5">
+        <div className="max-h-[65dvh] space-y-4 overflow-y-auto p-5">
           {!selectedProduct ? (
             <>
               <div className="relative">

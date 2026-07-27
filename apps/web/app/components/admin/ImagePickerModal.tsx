@@ -49,7 +49,7 @@ export function ImagePickerModal({
               No images uploaded yet — add a photo first.
             </p>
           ) : (
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
               {images.map((url) => {
                 const already = alreadySelected.includes(url);
                 const isSelected = selected.includes(url);
@@ -94,7 +94,7 @@ export function ImagePickerModal({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-[var(--color-border)] px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] px-5 py-4">
           <p className="text-xs text-[var(--color-muted)]">{selected.length} selected</p>
           <div className="flex gap-2">
             <button
