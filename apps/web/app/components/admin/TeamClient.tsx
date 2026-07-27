@@ -121,7 +121,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"
           disabled={loading}
@@ -179,7 +179,7 @@ function MemberCard({
   });
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4">
+    <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-[var(--color-border)] bg-white px-5 py-4">
       <Avatar name={member.name} />
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
@@ -191,7 +191,7 @@ function MemberCard({
           )}
           <RoleBadge role={member.role} />
         </div>
-        <p className="mt-0.5 text-xs text-[var(--color-muted)] truncate">{member.email}</p>
+        <p className="mt-0.5 hidden text-xs text-[var(--color-muted)] truncate sm:block">{member.email}</p>
         <p className="mt-0.5 text-[10px] text-[var(--color-muted)]">Joined {joined}</p>
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
@@ -273,7 +273,7 @@ export function TeamClient({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[var(--color-muted)]">
           {members.length} member{members.length !== 1 ? "s" : ""} with admin access
         </p>
