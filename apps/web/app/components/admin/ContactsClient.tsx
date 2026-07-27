@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Mail, MailOpen, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { markContactRead, deleteContact } from "@/actions/contactActions";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 type Contact = {
   id: string;
@@ -17,6 +18,7 @@ type Contact = {
 
 function ContactRow({ contact, onUpdate }: { contact: Contact; onUpdate: (id: string, patch: Partial<Contact>) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function toggleRead() {
@@ -27,7 +29,7 @@ function ContactRow({ contact, onUpdate }: { contact: Contact; onUpdate: (id: st
   }
 
   function handleDelete() {
-    if (!confirm("Delete this message?")) return;
+    setConfirmOpen(false);
     startTransition(async () => {
       await deleteContact(contact.id);
       onUpdate(contact.id, { id: "__deleted__" });
@@ -94,7 +96,7 @@ function ContactRow({ contact, onUpdate }: { contact: Contact; onUpdate: (id: st
             {isPending ? <Loader2 size={14} className="animate-spin" /> : contact.isRead ? <Mail size={14} /> : <MailOpen size={14} />}
           </button>
           <button
-            onClick={handleDelete}
+            onClick={() => setConfirmOpen(true)}
             disabled={isPending}
             title="Delete"
             className="rounded-lg p-1.5 text-[var(--color-muted)] transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
@@ -122,6 +124,16 @@ function ContactRow({ contact, onUpdate }: { contact: Contact; onUpdate: (id: st
             Reply via email
           </a>
         </div>
+      )}
+
+      {confirmOpen && (
+        <ConfirmDialog
+          title="Delete this message?"
+          message={`This will permanently delete the message from ${contact.name}.`}
+          isPending={isPending}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmOpen(false)}
+        />
       )}
     </div>
   );

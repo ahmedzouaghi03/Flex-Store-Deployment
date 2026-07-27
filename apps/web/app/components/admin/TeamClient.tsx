@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, X, Shield, UserMinus, ChevronDown, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { Plus, X, Shield, UserMinus, ChevronDown, Loader2, Pencil } from "lucide-react";
 import {
   addTeamMember,
   updateMemberRole,
   removeTeamMember,
 } from "@/actions/teamActions";
 import type { TeamMember } from "@/actions/teamActions";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 const inp =
   "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition";
@@ -149,6 +151,7 @@ function MemberCard({
   const [, start] = useTransition();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function handleRoleChange(newRole: "ADMIN" | "SUPER_ADMIN") {
     setLoading("role");
@@ -161,7 +164,7 @@ function MemberCard({
   }
 
   async function handleRemove() {
-    if (!confirm(`Remove ${member.name} from the team?`)) return;
+    setConfirmOpen(false);
     setLoading("remove");
     setError("");
     start(async () => {
@@ -193,38 +196,60 @@ function MemberCard({
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>
 
-      {isSuperAdmin && !isSelf && (
+      {isSuperAdmin && (
         <div className="flex shrink-0 items-center gap-2">
-          {member.role === "ADMIN" ? (
-            <button
-              onClick={() => handleRoleChange("SUPER_ADMIN")}
-              disabled={loading !== null}
-              title="Promote to Super Admin"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]/30 transition disabled:opacity-40"
-            >
-              {loading === "role" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
-              Promote
-            </button>
-          ) : (
-            <button
-              onClick={() => handleRoleChange("ADMIN")}
-              disabled={loading !== null}
-              title="Demote to Admin"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold text-[var(--color-muted)] hover:text-amber-600 hover:border-amber-200 transition disabled:opacity-40"
-            >
-              {loading === "role" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
-              Demote
-            </button>
-          )}
-          <button
-            onClick={handleRemove}
-            disabled={loading !== null}
-            title="Remove from team"
-            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-2 text-[var(--color-muted)] hover:border-red-200 hover:text-red-500 transition disabled:opacity-40"
+          <Link
+            href={`/admin/team/${member.id}/edit`}
+            title="Edit member"
+            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-2 text-[var(--color-muted)] hover:border-[var(--color-accent)]/30 hover:text-[var(--color-accent)] transition"
           >
-            {loading === "remove" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserMinus className="h-3.5 w-3.5" />}
-          </button>
+            <Pencil className="h-3.5 w-3.5" />
+          </Link>
+          {!isSelf && (
+            <>
+              {member.role === "ADMIN" ? (
+                <button
+                  onClick={() => handleRoleChange("SUPER_ADMIN")}
+                  disabled={loading !== null}
+                  title="Promote to Super Admin"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]/30 transition disabled:opacity-40"
+                >
+                  {loading === "role" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
+                  Promote
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleRoleChange("ADMIN")}
+                  disabled={loading !== null}
+                  title="Demote to Admin"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-xs font-semibold text-[var(--color-muted)] hover:text-amber-600 hover:border-amber-200 transition disabled:opacity-40"
+                >
+                  {loading === "role" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shield className="h-3 w-3" />}
+                  Demote
+                </button>
+              )}
+              <button
+                onClick={() => setConfirmOpen(true)}
+                disabled={loading !== null}
+                title="Remove from team"
+                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-2 text-[var(--color-muted)] hover:border-red-200 hover:text-red-500 transition disabled:opacity-40"
+              >
+                {loading === "remove" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserMinus className="h-3.5 w-3.5" />}
+              </button>
+            </>
+          )}
         </div>
+      )}
+
+      {confirmOpen && (
+        <ConfirmDialog
+          title="Remove from team?"
+          message={`${member.name} will lose admin access to the store.`}
+          confirmLabel="Remove"
+          isPending={loading === "remove"}
+          onConfirm={handleRemove}
+          onCancel={() => setConfirmOpen(false)}
+        />
       )}
     </div>
   );
@@ -249,12 +274,9 @@ export function TeamClient({
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--color-text)]">Team</h1>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            {members.length} member{members.length !== 1 ? "s" : ""} with admin access
-          </p>
-        </div>
+        <p className="text-sm text-[var(--color-muted)]">
+          {members.length} member{members.length !== 1 ? "s" : ""} with admin access
+        </p>
         {isSuperAdmin && !showForm && (
           <button
             onClick={() => setShowForm(true)}
