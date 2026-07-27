@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";  
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -19,6 +20,12 @@ const nextConfig: NextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins.push(new PrismaPlugin());
+    }
+    return config;
   },
 };
 

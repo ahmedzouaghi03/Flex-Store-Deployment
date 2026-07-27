@@ -24,6 +24,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@prisma/nextjs-monorepo-workaround-plugin':
+        specifier: ^7.9.1
+        version: 7.9.1
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.0.8)(react@19.2.6)
@@ -579,6 +582,9 @@ packages:
 
   '@prisma/get-platform@5.22.0':
     resolution: {integrity: sha512-pHhpQdr1UPFpt+zFfnPazhulaZYCUqeIcPpJViYoq9R+D/yw4fjE+CtnsnKzPYm0ddUbeXUzjGVGIRVgPDCk4Q==}
+
+  '@prisma/nextjs-monorepo-workaround-plugin@7.9.1':
+    resolution: {integrity: sha512-F81HLKW97Exi3ipmIlBmMCc6s0sGZ59lfs7jxWKr6PjvOHVhPPU42PCTz79rie4/HlCehZVyhatNui+8U3NBow==}
 
   '@radix-ui/react-compose-refs@1.1.2':
     resolution: {integrity: sha512-z4eqJvfiNnFMHIIvXP3CY57y2WJs5g2v3X0zm9mEJkrkNv4rDxu+sg9Jh8EkXyeqBkB7SOcboo9dMVqhyrACIg==}
@@ -1948,6 +1954,8 @@ snapshots:
   '@prisma/get-platform@5.22.0':
     dependencies:
       '@prisma/debug': 5.22.0
+
+  '@prisma/nextjs-monorepo-workaround-plugin@7.9.1': {}
 
   '@radix-ui/react-compose-refs@1.1.2(@types/react@19.0.8)(react@19.2.6)':
     dependencies:
