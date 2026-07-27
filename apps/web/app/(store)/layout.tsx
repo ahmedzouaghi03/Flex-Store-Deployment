@@ -11,7 +11,7 @@ export default function StoreLayout({
       {children}
       <footer className="mt-16 border-t border-[var(--color-border)] py-8">
         <div className="mx-auto max-w-6xl px-6 text-center text-sm text-[var(--color-muted)]">
-          © {new Date().getFullYear()} ShoeStore — Display catalog MVP
+          © {new Date().getFullYear()} ShoeStore — Powered By IT VISION
         </div>
       </footer>
     </>

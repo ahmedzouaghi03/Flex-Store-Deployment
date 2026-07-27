@@ -14,6 +14,18 @@ export const ourFileRouter = {
     const imageUrl = file.ufsUrl;
     return { imageUrl };
   }),
+
+  storeImage: f({
+    image: { maxFileSize: "4MB", maxFileCount: 1 },
+  }).onUploadComplete(async ({ file }) => {
+    return { imageUrl: file.ufsUrl };
+  }),
+
+  storeVideo: f({
+    video: { maxFileSize: "64MB", maxFileCount: 1 },
+  }).onUploadComplete(async ({ file }) => {
+    return { videoUrl: file.ufsUrl };
+  }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

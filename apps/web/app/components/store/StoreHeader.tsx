@@ -8,10 +8,12 @@ import { UserMenu } from "./UserMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { getCurrentUser } from "@/lib/session";
 import { getTranslations } from "next-intl/server";
+import { getStoreSettings } from "@/actions/storeSettingsActions";
 
 export async function StoreHeader() {
-  const session = await getCurrentUser();
+  const [session, settings] = await Promise.all([getCurrentUser(), getStoreSettings()]);
   const t = await getTranslations("Nav");
+  const logoUrl = settings.success ? settings.data?.logoUrl ?? null : null;
 
   return (
     <>
@@ -24,7 +26,7 @@ export async function StoreHeader() {
 
           {/* Logo */}
           <Link href="/" className="shrink-0 transition-opacity hover:opacity-80">
-            <LogoImage height={38} />
+            <LogoImage height={38} src={logoUrl} />
           </Link>
 
           {/* Pill nav — center */}

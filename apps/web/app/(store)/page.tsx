@@ -1,25 +1,33 @@
 import Link from "next/link";
 import { ArrowRight, Play, Feather, Leaf, Zap, Star } from "lucide-react";
-import { existsSync } from "fs";
-import { join } from "path";
 
 import { getFeaturedProducts } from "@/actions/productActions";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { HeroImage } from "@/components/store/HeroImage";
 import { AutoPlayVideo } from "@/components/store/AutoPlayVideo";
 import { getStoreConfig } from "@/lib/store-config";
+import { getStoreSettings } from "@/actions/storeSettingsActions";
 
 const USP_ICONS = [Feather, Leaf, Zap, Star];
 
 export default async function HomePage() {
-  const [featured, config] = await Promise.all([
+  const [featured, settingsResult] = await Promise.all([
     getFeaturedProducts(),
-    Promise.resolve(getStoreConfig()),
+    getStoreSettings(),
   ]);
+  const config = getStoreConfig();
   const products = featured.success ? (featured.data ?? []) : [];
-  const { hero, photoCard, usp, video, collection, footerCta } = config;
+  const { hero, usp, video, collection, footerCta } = config;
+  const settings = settingsResult.success ? settingsResult.data : null;
 
-  const hasVideo = existsSync(join(process.cwd(), "public", "store-video.mp4"));
+  const overlayCard = {
+    label: settings?.heroOverlayCardLabel ?? "Collection",
+    year: settings?.heroOverlayCardYear ?? "2025",
+    collection: settings?.heroOverlayCardCollection ?? "",
+  };
+
+  const videoUrl = settings?.videoUrl ?? null;
+  const hasVideo = videoUrl !== null;
 
   return (
     <main>
@@ -86,10 +94,13 @@ export default async function HomePage() {
               <div className="relative w-full max-w-md">
                 <div className="absolute -inset-3 rounded-[2.5rem] border border-white/10" />
                 <div className="absolute inset-0 rounded-3xl bg-[var(--color-green-bright)] opacity-10 blur-2xl" />
-                <HeroImage />
+                <HeroImage src={settings?.heroImage} />
                 <div className="absolute -bottom-4 -left-4 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-md">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">{photoCard.label}</p>
-                  <p className="text-base font-black text-white">{photoCard.year}</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-white/60">{overlayCard.label}</p>
+                  <p className="text-base font-black text-white">{overlayCard.year}</p>
+                  {overlayCard.collection && (
+                    <p className="text-xs text-white/70">{overlayCard.collection}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -126,7 +137,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── VIDEO ────────────────────────────────────────────────────── */}
-      {hasVideo && (
+      {videoUrl && (
         <section id="video" className="py-24 bg-[var(--color-bg)]">
           <div className="mx-auto max-w-6xl px-6">
             <div className="mb-10 text-center">
@@ -140,7 +151,7 @@ export default async function HomePage() {
             </div>
 
             <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
-              <AutoPlayVideo src="/store-video.mp4" />
+              <AutoPlayVideo src={videoUrl} />
             </div>
           </div>
         </section>

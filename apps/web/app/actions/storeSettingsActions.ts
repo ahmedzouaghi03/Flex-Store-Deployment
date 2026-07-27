@@ -29,6 +29,9 @@ function serialize(s: any, usps: any[]): SerializedStoreSettings {
     heroSubtitle: s.heroSubtitle,
     heroCta1: s.heroCta1,
     heroCta2: s.heroCta2,
+    heroOverlayCardLabel: s.heroOverlayCardLabel,
+    heroOverlayCardYear: s.heroOverlayCardYear,
+    heroOverlayCardCollection: s.heroOverlayCardCollection,
     videoUrl: s.videoUrl,
     videoSectionLabel: s.videoSectionLabel,
     videoSectionTitle: s.videoSectionTitle,
@@ -79,6 +82,19 @@ export async function saveDeliveryFee(deliveryFee: number): Promise<ActionResult
   }
 }
 
+export async function saveLogoUrl(logoUrl: string): Promise<ActionResult> {
+  try {
+    const settings = await getOrCreate();
+    await db.storeSettings.update({ where: { id: settings.id }, data: { logoUrl } });
+    revalidatePath("/", "layout");
+    revalidatePath("/admin", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("[STORE SETTINGS] saveLogoUrl error:", error);
+    return { success: false, error: "Failed to save logo" };
+  }
+}
+
 export async function saveHeroSettings(data: {
   heroImage?: string | null;
   heroBadge?: string | null;
@@ -88,6 +104,9 @@ export async function saveHeroSettings(data: {
   heroSubtitle?: string | null;
   heroCta1?: string | null;
   heroCta2?: string | null;
+  heroOverlayCardLabel?: string | null;
+  heroOverlayCardYear?: string | null;
+  heroOverlayCardCollection?: string | null;
 }): Promise<ActionResult> {
   try {
     const settings = await getOrCreate();

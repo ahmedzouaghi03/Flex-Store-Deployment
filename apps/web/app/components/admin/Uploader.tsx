@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { useUploadThing } from "@/uploadthing";
+import type { OurFileRouter } from "@/api/uploadthing/core";
 import { toast } from "react-hot-toast";
 import { Upload } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton"; // adjust path if needed
@@ -16,6 +17,7 @@ interface UploaderProps {
   value?: string | null;
   buttonText?: string;
   maxFileCount?: number;
+  endpoint?: keyof OurFileRouter;
 }
 
 export default function Uploader({
@@ -23,11 +25,12 @@ export default function Uploader({
   value,
   buttonText = "Upload Photo",
   maxFileCount = 1,
+  endpoint = "productImage",
 }: UploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
 
-  const { startUpload, isUploading } = useUploadThing("productImage", {
+  const { startUpload, isUploading } = useUploadThing(endpoint, {
     onClientUploadComplete: (res) => {
       if (res && res.length > 0) {
         handleUploadComplete(res as UploadResponse[]);
