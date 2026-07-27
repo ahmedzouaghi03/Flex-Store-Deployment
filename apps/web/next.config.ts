@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
       { protocol: "https", hostname: "utfs.io", pathname: "/**" },
       { protocol: "https", hostname: "ufs.sh", pathname: "/**" },
+      { protocol: "https", hostname: "i.ibb.co", pathname: "/**" },
     ],
     unoptimized: process.env.NODE_ENV === "development",
   },
