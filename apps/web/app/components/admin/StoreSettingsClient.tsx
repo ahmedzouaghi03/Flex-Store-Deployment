@@ -2,10 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { RotateCcw, Loader2, Play } from "lucide-react";
-import type { StoreConfig, StoreColors } from "@/lib/store-config";
+import type { StoreColors } from "@/lib/store-config";
+import type { HeroText, VideoText, FooterCtaText, CollectionText, UspItem, ContactInfo } from "@/types";
 import { resetToDefault } from "@/actions/storeConfigActions";
 import { HeroTextEditor } from "./HeroTextEditor";
 import { VideoTextEditor, FooterCtaEditor } from "./VideoTextEditor";
+import { CollectionTextEditor } from "./CollectionTextEditor";
+import { UspEditor } from "./UspEditor";
 import { ColorEditor } from "./ColorEditor";
 import { DeliveryFeeEditor, DeliveryFeeMiniPreview } from "./DeliveryFeeEditor";
 import { ContactInfoEditor, ContactInfoMiniPreview } from "./ContactInfoEditor";
@@ -13,7 +16,6 @@ import { HeroPhotoUpload, type HeroOverlayCard } from "./HeroPhotoUpload";
 import { VideoUpload } from "./VideoUpload";
 import { LogoUpload } from "./LogoUpload";
 import { StorePreview } from "./StorePreview";
-import type { ContactInfo } from "@/types";
 
 type StoreMedia = {
   logoUrl: string | null;
@@ -95,7 +97,7 @@ function HeroMiniPreview({
   heroImageUrl,
   photoCard,
 }: {
-  hero: StoreConfig["hero"];
+  hero: HeroText;
   colors: StoreColors;
   heroImageUrl?: string | null;
   photoCard?: HeroOverlayCard;
@@ -179,7 +181,7 @@ function HeroMiniPreview({
 
 
 
-function VideoMiniPreview({ video, colors }: { video: StoreConfig["video"]; colors: StoreColors }) {
+function VideoMiniPreview({ video, colors }: { video: VideoText; colors: StoreColors }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)] shadow-sm">
       <div className="p-4">
@@ -208,7 +210,7 @@ function VideoMiniPreview({ video, colors }: { video: StoreConfig["video"]; colo
   );
 }
 
-function FooterMiniPreview({ footerCta, colors }: { footerCta: StoreConfig["footerCta"]; colors: StoreColors }) {
+function FooterMiniPreview({ footerCta, colors }: { footerCta: FooterCtaText; colors: StoreColors }) {
   return (
     <div
       className="overflow-hidden rounded-2xl p-5 text-center shadow-sm"
@@ -231,6 +233,50 @@ function FooterMiniPreview({ footerCta, colors }: { footerCta: StoreConfig["foot
       >
         {footerCta.btn} →
       </span>
+    </div>
+  );
+}
+
+function CollectionMiniPreview({ collection, colors }: { collection: CollectionText; colors: StoreColors }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white shadow-sm">
+      <div className="p-4">
+        <p className="font-bold uppercase tracking-widest" style={{ fontSize: 8, color: colors.accent }}>
+          {collection.label}
+        </p>
+        <p className="mt-0.5 font-bold leading-tight text-[var(--color-text)]" style={{ fontSize: 13 }}>
+          {collection.title}
+        </p>
+        <p className="mt-0.5 line-clamp-2 text-[var(--color-muted)]" style={{ fontSize: 8, lineHeight: 1.4 }}>
+          {collection.desc}
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-1.5 px-4 pb-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="aspect-square rounded-lg bg-[var(--color-bg)]" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UspMiniPreview({ usps, colors }: { usps: UspItem[]; colors: StoreColors }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-white p-4 shadow-sm">
+      <div className="grid grid-cols-2 gap-3">
+        {usps.map((item, i) => (
+          <div key={i} className="text-center">
+            <div
+              className="mx-auto mb-1 flex h-6 w-6 items-center justify-center rounded-lg"
+              style={{ backgroundColor: colors.accent + "1a" }}
+            >
+              <span style={{ fontSize: 9, color: colors.accent }}>✦</span>
+            </div>
+            <p className="font-semibold text-[var(--color-text)]" style={{ fontSize: 8 }}>{item.label}</p>
+            <p className="text-[var(--color-muted)]" style={{ fontSize: 7 }}>{item.desc}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -292,20 +338,34 @@ function LogoMiniPreview({ url }: { url: string | null }) {
 // ── Main component ─────────────────────────────────────────────────────────
 
 export function StoreSettingsClient({
-  config,
+  hero,
+  colors,
+  video,
+  footerCta,
+  collection,
+  usps,
+  deliveryFeeCents,
   contactInfo,
   media,
 }: {
-  config: StoreConfig;
+  hero: HeroText;
+  colors: StoreColors;
+  video: VideoText;
+  footerCta: FooterCtaText;
+  collection: CollectionText;
+  usps: UspItem[];
+  deliveryFeeCents: number;
   contactInfo: ContactInfo;
   media: StoreMedia;
 }) {
-  const [heroPreview, setHeroPreview]         = useState(config.hero);
+  const [heroPreview, setHeroPreview]         = useState(hero);
   const [overlayCardPreview, setOverlayCardPreview] = useState<HeroOverlayCard>(media.overlayCard);
-  const [videoPreview, setVideoPreview]       = useState(config.video);
-  const [footerPreview, setFooterPreview]     = useState(config.footerCta);
-  const [colorPreview, setColorPreview]       = useState<StoreColors>(config.colors);
-  const [deliveryFeePreview, setDeliveryFeePreview] = useState(config.deliveryFeeCents);
+  const [videoPreview, setVideoPreview]       = useState(video);
+  const [footerPreview, setFooterPreview]     = useState(footerCta);
+  const [collectionPreview, setCollectionPreview] = useState(collection);
+  const [uspsPreview, setUspsPreview]         = useState(usps);
+  const [colorPreview, setColorPreview]       = useState<StoreColors>(colors);
+  const [deliveryFeePreview, setDeliveryFeePreview] = useState(deliveryFeeCents);
   const [contactPreview, setContactPreview]   = useState(contactInfo);
   const [logoUrl, setLogoUrl]                 = useState(media.logoUrl);
   const [heroImageUrl, setHeroImageUrl]       = useState(media.heroImage);
@@ -335,7 +395,7 @@ export function StoreSettingsClient({
       <EditRow
         title="🎯 Hero Section — Text"
         desc="The main banner at the top of your homepage."
-        editor={<HeroTextEditor initial={config.hero} onPreviewChange={setHeroPreview} />}
+        editor={<HeroTextEditor initial={hero} onPreviewChange={setHeroPreview} />}
         preview={<HeroMiniPreview hero={heroPreview} colors={colorPreview} heroImageUrl={heroImageUrl} />}
       />
 
@@ -358,7 +418,7 @@ export function StoreSettingsClient({
       <EditRow
         title="🎬 Video Section — Text"
         desc='Labels and description for the "Our Story" section.'
-        editor={<VideoTextEditor initial={config.video} onPreviewChange={setVideoPreview} />}
+        editor={<VideoTextEditor initial={video} onPreviewChange={setVideoPreview} />}
         preview={<VideoMiniPreview video={videoPreview} colors={colorPreview} />}
       />
 
@@ -370,11 +430,27 @@ export function StoreSettingsClient({
         preview={<VideoMiniPreview video={videoPreview} colors={colorPreview} />}
       />
 
+      {/* USP bar */}
+      <EditRow
+        title="✨ USP Bar — Text"
+        desc="The feature highlights shown just below the hero banner."
+        editor={<UspEditor initial={usps} onPreviewChange={setUspsPreview} />}
+        preview={<UspMiniPreview usps={uspsPreview} colors={colorPreview} />}
+      />
+
+      {/* Collection section text */}
+      <EditRow
+        title="📦 Collection Section — Text"
+        desc="Label, title, and description shown above your featured products."
+        editor={<CollectionTextEditor initial={collection} onPreviewChange={setCollectionPreview} />}
+        preview={<CollectionMiniPreview collection={collectionPreview} colors={colorPreview} />}
+      />
+
       {/* Footer CTA */}
       <EditRow
         title="📢 Footer Call-to-Action"
         desc="The green banner at the very bottom of the homepage."
-        editor={<FooterCtaEditor initial={config.footerCta} onPreviewChange={setFooterPreview} />}
+        editor={<FooterCtaEditor initial={footerCta} onPreviewChange={setFooterPreview} />}
         preview={<FooterMiniPreview footerCta={footerPreview} colors={colorPreview} />}
       />
 
@@ -382,7 +458,7 @@ export function StoreSettingsClient({
       <EditRow
         title="🎨 Brand Colors"
         desc="Pick colors for the entire site. The preview updates instantly."
-        editor={<ColorEditor initial={config.colors} onPreviewChange={setColorPreview} />}
+        editor={<ColorEditor initial={colors} onPreviewChange={setColorPreview} />}
         preview={<ColorMiniPreview colors={colorPreview} />}
       />
 
@@ -390,7 +466,7 @@ export function StoreSettingsClient({
       <EditRow
         title="🚚 Delivery Fee"
         desc="Flat fee added to every order's total at checkout."
-        editor={<DeliveryFeeEditor initialCents={config.deliveryFeeCents} onPreviewChange={setDeliveryFeePreview} />}
+        editor={<DeliveryFeeEditor initialCents={deliveryFeeCents} onPreviewChange={setDeliveryFeePreview} />}
         preview={<DeliveryFeeMiniPreview cents={deliveryFeePreview} />}
       />
 
@@ -437,7 +513,7 @@ export function StoreSettingsClient({
               video={videoPreview}
               footerCta={footerPreview}
               colors={colorPreview}
-              usp={config.usp}
+              usp={uspsPreview}
               logoUrl={logoUrl}
               heroImageUrl={heroImageUrl}
             />

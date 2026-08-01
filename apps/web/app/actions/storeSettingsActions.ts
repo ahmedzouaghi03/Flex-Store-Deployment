@@ -32,6 +32,12 @@ function serialize(s: any, usps: any[]): SerializedStoreSettings {
     heroOverlayCardLabel: s.heroOverlayCardLabel,
     heroOverlayCardYear: s.heroOverlayCardYear,
     heroOverlayCardCollection: s.heroOverlayCardCollection,
+    colorAccent: s.colorAccent,
+    colorGreenDark: s.colorGreenDark,
+    colorGreen: s.colorGreen,
+    colorGreenMid: s.colorGreenMid,
+    colorGreenLight: s.colorGreenLight,
+    colorGreenBright: s.colorGreenBright,
     videoUrl: s.videoUrl,
     videoSectionLabel: s.videoSectionLabel,
     videoSectionTitle: s.videoSectionTitle,
@@ -119,6 +125,25 @@ export async function saveHeroSettings(data: {
   }
 }
 
+export async function saveColorSettings(data: {
+  colorAccent?: string | null;
+  colorGreenDark?: string | null;
+  colorGreen?: string | null;
+  colorGreenMid?: string | null;
+  colorGreenLight?: string | null;
+  colorGreenBright?: string | null;
+}): Promise<ActionResult> {
+  try {
+    const settings = await getOrCreate();
+    await db.storeSettings.update({ where: { id: settings.id }, data });
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("[STORE SETTINGS] saveColors error:", error);
+    return { success: false, error: "Failed to save" };
+  }
+}
+
 export async function saveVideoSettings(data: {
   videoUrl?: string | null;
   videoSectionLabel?: string | null;
@@ -132,6 +157,22 @@ export async function saveVideoSettings(data: {
     return { success: true };
   } catch (error) {
     console.error("[STORE SETTINGS] saveVideo error:", error);
+    return { success: false, error: "Failed to save" };
+  }
+}
+
+export async function saveCollectionSettings(data: {
+  collectionLabel?: string | null;
+  collectionTitle?: string | null;
+  collectionDesc?: string | null;
+}): Promise<ActionResult> {
+  try {
+    const settings = await getOrCreate();
+    await db.storeSettings.update({ where: { id: settings.id }, data });
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("[STORE SETTINGS] saveCollection error:", error);
     return { success: false, error: "Failed to save" };
   }
 }

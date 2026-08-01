@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { saveColors } from "@/actions/storeConfigActions";
+import { saveColorSettings } from "@/actions/storeSettingsActions";
 import type { StoreColors } from "@/lib/store-config";
 import { SaveButton } from "./HeroTextEditor";
 import { ChevronDown, ChevronUp, Wand2 } from "lucide-react";
@@ -129,7 +129,14 @@ export function ColorEditor({
   function handleSave() {
     setError("");
     startTransition(async () => {
-      const res = await saveColors(colors);
+      const res = await saveColorSettings({
+        colorAccent: colors.accent,
+        colorGreenDark: colors["green-dark"],
+        colorGreen: colors.green,
+        colorGreenMid: colors["green-mid"],
+        colorGreenLight: colors["green-light"],
+        colorGreenBright: colors["green-bright"],
+      });
       if (res.success) setSaved(true);
       else setError(res.error ?? "Failed to save");
     });

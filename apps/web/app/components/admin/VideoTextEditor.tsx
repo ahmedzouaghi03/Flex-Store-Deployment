@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { saveVideoText, saveFooterCta } from "@/actions/storeConfigActions";
-import type { StoreConfig } from "@/lib/store-config";
+import { saveVideoSettings, saveFooterSettings } from "@/actions/storeSettingsActions";
+import type { VideoText, FooterCtaText } from "@/types";
 import { Field, SaveButton, inp } from "./HeroTextEditor";
 
 export function VideoTextEditor({
   initial,
   onPreviewChange,
 }: {
-  initial: StoreConfig["video"];
-  onPreviewChange?: (v: StoreConfig["video"]) => void;
+  initial: VideoText;
+  onPreviewChange?: (v: VideoText) => void;
 }) {
   const [form, setForm] = useState(initial);
   const [pending, startTransition] = useTransition();
@@ -27,7 +27,11 @@ export function VideoTextEditor({
   function handleSave() {
     setError("");
     startTransition(async () => {
-      const res = await saveVideoText(form);
+      const res = await saveVideoSettings({
+        videoSectionLabel: form.label,
+        videoSectionTitle: form.title,
+        videoSectionDesc: form.desc,
+      });
       if (res.success) setSaved(true);
       else setError(res.error ?? "Failed to save");
     });
@@ -56,8 +60,8 @@ export function FooterCtaEditor({
   initial,
   onPreviewChange,
 }: {
-  initial: StoreConfig["footerCta"];
-  onPreviewChange?: (v: StoreConfig["footerCta"]) => void;
+  initial: FooterCtaText;
+  onPreviewChange?: (v: FooterCtaText) => void;
 }) {
   const [form, setForm] = useState(initial);
   const [pending, startTransition] = useTransition();
@@ -74,7 +78,11 @@ export function FooterCtaEditor({
   function handleSave() {
     setError("");
     startTransition(async () => {
-      const res = await saveFooterCta(form);
+      const res = await saveFooterSettings({
+        footerCtaTitle: form.title,
+        footerCtaDesc: form.desc,
+        footerCtaBtn: form.btn,
+      });
       if (res.success) setSaved(true);
       else setError(res.error ?? "Failed to save");
     });

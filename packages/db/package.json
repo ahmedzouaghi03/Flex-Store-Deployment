@@ -15,11 +15,15 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} seed.ts"
   },
   "dependencies": {
+    "@prisma/adapter-neon": "5.22.0",
     "@prisma/client": "^5.22.0",
-    "uploadthing": "^7.7.4"
+    "uploadthing": "^7.7.4",
+    "ws": "^8.21.1"
   },
   "devDependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "@types/node": "22.9.0",
+    "@types/ws": "^8.18.1",
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "typescript": "5.7.2"

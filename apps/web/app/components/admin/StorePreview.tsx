@@ -1,12 +1,13 @@
 "use client";
 
-import type { StoreConfig, StoreColors } from "@/lib/store-config";
+import type { StoreColors } from "@/lib/store-config";
+import type { HeroText, VideoText, FooterCtaText, UspItem } from "@/types";
 
 type Props = {
-  hero: StoreConfig["hero"];
-  video: StoreConfig["video"];
-  footerCta: StoreConfig["footerCta"];
-  usp: StoreConfig["usp"];
+  hero: HeroText;
+  video: VideoText;
+  footerCta: FooterCtaText;
+  usp: UspItem[];
   colors: StoreColors;
   logoUrl?: string | null;
   heroImageUrl?: string | null;

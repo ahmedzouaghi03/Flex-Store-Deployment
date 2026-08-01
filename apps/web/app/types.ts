@@ -188,6 +188,59 @@ export type OrderStatistics = {
 
 // ─── Store settings types ─────────────────────────────────────────────────────
 
+export type HeroText = {
+  badge: string;
+  line1: string;
+  line2: string;
+  line3: string;
+  subtitle: string;
+  cta1: string;
+  cta2: string;
+};
+
+export type VideoText = { label: string; title: string; desc: string };
+
+export const DEFAULT_VIDEO: VideoText = {
+  label: "Our Story",
+  title: "Comfort that moves with you",
+  desc: "See how Flex Comfort Shoes are crafted for every step of your day.",
+};
+
+export type CollectionText = { label: string; title: string; desc: string };
+
+export const DEFAULT_COLLECTION: CollectionText = {
+  label: "Collection",
+  title: "Featured Shoes",
+  desc: "Hand-picked pairs from our collection",
+};
+
+export type FooterCtaText = { title: string; desc: string; btn: string };
+
+export const DEFAULT_FOOTER_CTA: FooterCtaText = {
+  title: "Find your perfect pair.",
+  desc: "Browse our full catalog of comfort shoes for every occasion.",
+  btn: "Shop All Shoes",
+};
+
+export type UspItem = { label: string; desc: string };
+
+export const DEFAULT_USPS: UspItem[] = [
+  { label: "Ultra Light", desc: "Feather-light build" },
+  { label: "Flexible", desc: "Moves with your foot" },
+  { label: "Responsive", desc: "Instant cushioning" },
+  { label: "Premium", desc: "Quality materials" },
+];
+
+export const DEFAULT_HERO: HeroText = {
+  badge: "New Collection 2025",
+  line1: "Léger.",
+  line2: "Flexible.",
+  line3: "Confortable.",
+  subtitle: "Engineered for everyday comfort without compromising on style.",
+  cta1: "Shop Collection",
+  cta2: "Watch Story",
+};
+
 export type StoreUspItem = {
   id: string;
   label: string;
@@ -209,6 +262,12 @@ export type SerializedStoreSettings = {
   heroOverlayCardLabel: string | null;
   heroOverlayCardYear: string | null;
   heroOverlayCardCollection: string | null;
+  colorAccent: string | null;
+  colorGreenDark: string | null;
+  colorGreen: string | null;
+  colorGreenMid: string | null;
+  colorGreenLight: string | null;
+  colorGreenBright: string | null;
   videoUrl: string | null;
   videoSectionLabel: string | null;
   videoSectionTitle: string | null;

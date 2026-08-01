@@ -5,8 +5,9 @@ import { getFeaturedProducts } from "@/actions/productActions";
 import { ProductGrid } from "@/components/store/ProductGrid";
 import { HeroImage } from "@/components/store/HeroImage";
 import { AutoPlayVideo } from "@/components/store/AutoPlayVideo";
-import { getStoreConfig } from "@/lib/store-config";
 import { getStoreSettings } from "@/actions/storeSettingsActions";
+import { DEFAULT_HERO, DEFAULT_VIDEO, DEFAULT_FOOTER_CTA, DEFAULT_COLLECTION, DEFAULT_USPS } from "@/types";
+import { Reveal } from "@/components/store/Reveal";
 
 const USP_ICONS = [Feather, Leaf, Zap, Star];
 
@@ -15,10 +16,41 @@ export default async function HomePage() {
     getFeaturedProducts(),
     getStoreSettings(),
   ]);
-  const config = getStoreConfig();
   const products = featured.success ? (featured.data ?? []) : [];
-  const { hero, usp, video, collection, footerCta } = config;
   const settings = settingsResult.success ? settingsResult.data : null;
+
+  const hero = {
+    badge: settings?.heroBadge ?? DEFAULT_HERO.badge,
+    line1: settings?.heroLine1 ?? DEFAULT_HERO.line1,
+    line2: settings?.heroLine2 ?? DEFAULT_HERO.line2,
+    line3: settings?.heroLine3 ?? DEFAULT_HERO.line3,
+    subtitle: settings?.heroSubtitle ?? DEFAULT_HERO.subtitle,
+    cta1: settings?.heroCta1 ?? DEFAULT_HERO.cta1,
+    cta2: settings?.heroCta2 ?? DEFAULT_HERO.cta2,
+  };
+
+  const video = {
+    label: settings?.videoSectionLabel ?? DEFAULT_VIDEO.label,
+    title: settings?.videoSectionTitle ?? DEFAULT_VIDEO.title,
+    desc: settings?.videoSectionDesc ?? DEFAULT_VIDEO.desc,
+  };
+
+  const footerCta = {
+    title: settings?.footerCtaTitle ?? DEFAULT_FOOTER_CTA.title,
+    desc: settings?.footerCtaDesc ?? DEFAULT_FOOTER_CTA.desc,
+    btn: settings?.footerCtaBtn ?? DEFAULT_FOOTER_CTA.btn,
+  };
+
+  const collection = {
+    label: settings?.collectionLabel ?? DEFAULT_COLLECTION.label,
+    title: settings?.collectionTitle ?? DEFAULT_COLLECTION.title,
+    desc: settings?.collectionDesc ?? DEFAULT_COLLECTION.desc,
+  };
+
+  const usp =
+    settings && settings.usps.length > 0
+      ? settings.usps.map((u) => ({ label: u.label, desc: u.desc }))
+      : DEFAULT_USPS;
 
   const overlayCard = {
     label: settings?.heroOverlayCardLabel ?? "Collection",
@@ -121,7 +153,7 @@ export default async function HomePage() {
             {usp.map((item, i) => {
               const Icon = USP_ICONS[i] ?? Star;
               return (
-                <div key={i} className="flex flex-col items-center gap-3 text-center">
+                <Reveal key={i} delay={i * 80} className="flex flex-col items-center gap-3 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-bg)] ring-1 ring-[var(--color-border)]">
                     <Icon className="h-5 w-5 text-[var(--color-accent)]" />
                   </div>
@@ -129,7 +161,7 @@ export default async function HomePage() {
                     <p className="font-semibold text-[var(--color-text)]">{item.label}</p>
                     <p className="mt-0.5 text-xs text-[var(--color-muted)]">{item.desc}</p>
                   </div>
-                </div>
+                </Reveal>
               );
             })}
           </div>
@@ -140,7 +172,7 @@ export default async function HomePage() {
       {videoUrl && (
         <section id="video" className="py-24 bg-[var(--color-bg)]">
           <div className="mx-auto max-w-6xl px-6">
-            <div className="mb-10 text-center">
+            <Reveal className="mb-10 text-center">
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
                 {video.label}
               </p>
@@ -148,11 +180,11 @@ export default async function HomePage() {
                 {video.title}
               </h2>
               <p className="mt-3 text-sm text-[var(--color-muted)]">{video.desc}</p>
-            </div>
+            </Reveal>
 
-            <div className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
+            <Reveal delay={120} className="relative aspect-video w-full overflow-hidden rounded-3xl border border-[var(--color-border)] bg-white shadow-lg">
               <AutoPlayVideo src={videoUrl} />
-            </div>
+            </Reveal>
           </div>
         </section>
       )}
@@ -160,7 +192,7 @@ export default async function HomePage() {
       {/* ── PRODUCTS ─────────────────────────────────────────────────── */}
       <section className="border-t border-[var(--color-border)] py-20 bg-white">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+          <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-[var(--color-accent)]">
                 {collection.label}
@@ -174,8 +206,10 @@ export default async function HomePage() {
             >
               View all <ArrowRight className="h-3.5 w-3.5" />
             </Link>
-          </div>
-          <ProductGrid products={products} />
+          </Reveal>
+          <Reveal delay={120}>
+            <ProductGrid products={products} />
+          </Reveal>
         </div>
       </section>
 
@@ -185,7 +219,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 50% 50%, var(--color-green-light) 0%, transparent 70%)" }}
         />
-        <div className="relative mx-auto max-w-xl px-6 text-center">
+        <Reveal className="relative mx-auto max-w-xl px-6 text-center">
           <h2 className="text-3xl font-black text-white md:text-5xl">{footerCta.title}</h2>
           <p className="mt-4 text-white/60">{footerCta.desc}</p>
           <Link
@@ -194,7 +228,7 @@ export default async function HomePage() {
           >
             {footerCta.btn} <ArrowRight className="h-4 w-4" />
           </Link>
-        </div>
+        </Reveal>
       </section>
     </main>
   );

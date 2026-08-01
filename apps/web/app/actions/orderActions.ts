@@ -2,7 +2,7 @@
 
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
-import { db } from "@shoestore/db";
+import { db, OrderStatus as PrismaOrderStatus } from "@shoestore/db";
 import { getCurrentUser } from "@/lib/session";
 import type {
   ActionResult,
@@ -211,6 +211,14 @@ export async function createOrder(
   }
 }
 
+const REVENUE_STATUSES: PrismaOrderStatus[] = [
+  PrismaOrderStatus.PENDING,
+  PrismaOrderStatus.CONFIRMED,
+  PrismaOrderStatus.PROCESSING,
+  PrismaOrderStatus.SHIPPED,
+  PrismaOrderStatus.DELIVERED,
+];
+
 function getPeriodStart(period: "today" | "7d" | "30d"): Date {
   const now = new Date();
   if (period === "today") {
@@ -231,7 +239,7 @@ export async function getOrderStats(
     const [total, revenue, byStatus] = await Promise.all([
       db.order.count({ where }),
       db.order.aggregate({
-        where: { ...where, status: { notIn: ["CANCELLED", "RETURNED"] } },
+        where: { ...where, status: { in: REVENUE_STATUSES } },
         _sum: { total: true },
       }),
       db.order.groupBy({ by: ["status"], where, _count: { _all: true } }),

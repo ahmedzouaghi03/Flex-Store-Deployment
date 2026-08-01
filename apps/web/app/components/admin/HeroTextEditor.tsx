@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
-import { saveHeroText } from "@/actions/storeConfigActions";
-import type { StoreConfig } from "@/lib/store-config";
+import { saveHeroSettings } from "@/actions/storeSettingsActions";
+import type { HeroText } from "@/types";
 
 type Props = {
-  initial: StoreConfig["hero"];
-  onPreviewChange?: (v: StoreConfig["hero"]) => void;
+  initial: HeroText;
+  onPreviewChange?: (v: HeroText) => void;
 };
 
 export function HeroTextEditor({ initial, onPreviewChange }: Props) {
@@ -26,7 +26,15 @@ export function HeroTextEditor({ initial, onPreviewChange }: Props) {
   function handleSave() {
     setError("");
     startTransition(async () => {
-      const res = await saveHeroText(form);
+      const res = await saveHeroSettings({
+        heroBadge: form.badge,
+        heroLine1: form.line1,
+        heroLine2: form.line2,
+        heroLine3: form.line3,
+        heroSubtitle: form.subtitle,
+        heroCta1: form.cta1,
+        heroCta2: form.cta2,
+      });
       if (res.success) setSaved(true);
       else setError(res.error ?? "Failed to save");
     });

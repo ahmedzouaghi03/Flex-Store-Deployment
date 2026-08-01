@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { getStoreConfig } from "@/lib/store-config";
+import { DEFAULT_COLORS } from "@/lib/store-config";
+import { getStoreSettings } from "@/actions/storeSettingsActions";
 import { CartProvider } from "@/cart-context";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
@@ -15,7 +16,16 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { colors } = getStoreConfig();
+  const settingsResult = await getStoreSettings();
+  const settings = settingsResult.success ? settingsResult.data : null;
+  const colors = {
+    accent: settings?.colorAccent ?? DEFAULT_COLORS.accent,
+    "green-dark": settings?.colorGreenDark ?? DEFAULT_COLORS["green-dark"],
+    green: settings?.colorGreen ?? DEFAULT_COLORS.green,
+    "green-mid": settings?.colorGreenMid ?? DEFAULT_COLORS["green-mid"],
+    "green-light": settings?.colorGreenLight ?? DEFAULT_COLORS["green-light"],
+    "green-bright": settings?.colorGreenBright ?? DEFAULT_COLORS["green-bright"],
+  };
   const locale = await getLocale();
   const dir = locale === "ar" ? "rtl" : "ltr";
 
