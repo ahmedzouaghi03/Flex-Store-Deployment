@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     if (isServer) {
       config.plugins.push(new PrismaPlugin());
     }
+    config.externals.push("bufferutil", "utf-8-validate");
     return config;
   },
 };
