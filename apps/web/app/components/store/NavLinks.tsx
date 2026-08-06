@@ -1,37 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Home, Store, Info, Mail } from "lucide-react";
 import { subdomainHref } from "@/lib/subdomain";
 
-export function NavLinks({ vertical = false }: { vertical?: boolean }) {
+export function NavLinks({ vertical = false, host = "" }: { vertical?: boolean; host?: string }) {
   const pathname = usePathname();
   const t = useTranslations("Nav");
-
-  // Empty until mount so SSR and the first client render match (no host yet);
-  // corrected right after via the effect below.
-  const [host, setHost] = useState("");
-  useEffect(() => setHost(window.location.host), []);
+  // The shop subdomain's root ("/") is rewritten to /shop server-side, so the
+  // browser-visible pathname stays "/" there — pathname alone can't tell Home
+  // and Shop apart on that host, hence the explicit onShop checks below.
+  const onShop = host.startsWith("shop.");
 
   const LINKS = [
-    { path: "/",        href: subdomainHref("/", "www", host),        label: t("Home"),    icon: Home },
-    { path: "/shop",    href: subdomainHref("/", "shop", host),       label: t("Shop"),    icon: Store },
-    { path: "/about",   href: subdomainHref("/about", "www", host),   label: t("About"),   icon: Info },
-    { path: "/contact", href: subdomainHref("/contact", "www", host), label: t("Contact"), icon: Mail },
+    {
+      key: "home",
+      href: subdomainHref("/", "www", host),
+      label: t("Home"),
+      icon: Home,
+      active: !onShop && pathname === "/",
+    },
+    {
+      key: "shop",
+      href: subdomainHref("/", "shop", host),
+      label: t("Shop"),
+      icon: Store,
+      active: pathname.startsWith("/shop") || (onShop && pathname === "/"),
+    },
+    {
+      key: "about",
+      href: subdomainHref("/about", "www", host),
+      label: t("About"),
+      icon: Info,
+      active: pathname.startsWith("/about"),
+    },
+    {
+      key: "contact",
+      href: subdomainHref("/contact", "www", host),
+      label: t("Contact"),
+      icon: Mail,
+      active: pathname.startsWith("/contact"),
+    },
   ];
 
   if (vertical) {
     return (
       <div className="flex flex-col gap-1">
-        {LINKS.map(({ path, href, label, icon: Icon }) => {
-          const active =
-            path === "/" ? pathname === "/" : pathname.startsWith(path);
+        {LINKS.map(({ key, href, label, icon: Icon, active }) => {
           return (
             <Link
-              key={path}
+              key={key}
               href={href}
               className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150 ${
                 active
@@ -50,12 +70,10 @@ export function NavLinks({ vertical = false }: { vertical?: boolean }) {
 
   return (
     <div className="flex items-center gap-1 rounded-2xl bg-[var(--color-bg)] p-1 border border-[var(--color-border)]">
-      {LINKS.map(({ path, href, label, icon: Icon }) => {
-        const active =
-          path === "/" ? pathname === "/" : pathname.startsWith(path);
+      {LINKS.map(({ key, href, label, icon: Icon, active }) => {
         return (
           <Link
-            key={path}
+            key={key}
             href={href}
             className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 ${
               active

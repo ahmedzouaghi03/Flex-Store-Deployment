@@ -35,7 +35,7 @@ export async function StoreHeader() {
 
         {/* Pill nav — center */}
         <div className="hidden sm:flex">
-          <NavLinks />
+          <NavLinks host={host} />
         </div>
 
         {/* Right actions */}
@@ -58,7 +58,7 @@ export async function StoreHeader() {
             </Link>
           )}
 
-          <MobileNavMenu />
+          <MobileNavMenu host={host} />
         </div>
       </ScrollHeader>
     </>
