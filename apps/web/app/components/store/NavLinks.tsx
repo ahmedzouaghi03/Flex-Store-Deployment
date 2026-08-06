@@ -18,7 +18,7 @@ export function NavLinks({ vertical = false }: { vertical?: boolean }) {
 
   const LINKS = [
     { path: "/",        href: subdomainHref("/", "www", host),        label: t("Home"),    icon: Home },
-    { path: "/shop",    href: subdomainHref("/shop", "shop", host),   label: t("Shop"),    icon: Store },
+    { path: "/shop",    href: subdomainHref("/", "shop", host),       label: t("Shop"),    icon: Store },
     { path: "/about",   href: subdomainHref("/about", "www", host),   label: t("About"),   icon: Info },
     { path: "/contact", href: subdomainHref("/contact", "www", host), label: t("Contact"), icon: Mail },
   ];

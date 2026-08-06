@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { UserCircle } from "lucide-react";
 import { LogoImage } from "./LogoImage";
 import { CartIcon } from "./CartIcon";
@@ -13,13 +14,19 @@ import { getTranslations } from "next-intl/server";
 import { getStoreSettings } from "@/actions/storeSettingsActions";
 
 export async function StoreHeader() {
-  const [session, settings] = await Promise.all([getCurrentUser(), getStoreSettings()]);
+  const [session, settings, host] = await Promise.all([
+    getCurrentUser(),
+    getStoreSettings(),
+    headers().then((h) => h.get("host") ?? ""),
+  ]);
   const t = await getTranslations("Nav");
   const logoUrl = settings.success ? settings.data?.logoUrl ?? null : null;
+  // Cart only exists on the shop subdomain — hide it everywhere else.
+  const onShop = host.split(":")[0].startsWith("shop.");
 
   return (
     <>
-      <CartDrawer />
+      {onShop && <CartDrawer />}
       <ScrollHeader>
         {/* Logo */}
         <Link href="/" className="shrink-0 transition-opacity hover:opacity-80">
@@ -35,7 +42,7 @@ export async function StoreHeader() {
         <div className="flex items-center gap-1 sm:gap-2">
           <LanguageSelector />
 
-          <CartIcon />
+          {onShop && <CartIcon />}
 
           <div className="h-5 w-px bg-[var(--color-border)]" />
 

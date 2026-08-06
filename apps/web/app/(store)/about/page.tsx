@@ -1,6 +1,8 @@
 import { ShieldCheck, Truck, RefreshCw, Headphones, Star, Users, Leaf } from "lucide-react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { headers } from "next/headers";
+import { subdomainHref } from "@/lib/subdomain";
 
 const VALUES = [
   {
@@ -31,7 +33,10 @@ const STATS = [
   { value: "100%", label: "Made with care" },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const host = (await headers()).get("host") ?? "";
+  const shopHref = subdomainHref("/", "shop", host);
+
   return (
     <main>
       {/* Hero */}
@@ -132,7 +137,7 @@ export default function AboutPage() {
           <p className="mt-2 text-sm text-[var(--color-muted)]">Browse our full collection and experience the difference.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
-              href="/shop"
+              href={shopHref}
               className="inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-8 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)]"
             >
               Shop Now <ArrowRight className="h-4 w-4" />

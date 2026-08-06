@@ -45,10 +45,6 @@ export function ProductCard({
   }
 
   function openQuickAdd(e: React.MouseEvent) {
-    // On the marketing domain, let the click fall through to the surrounding
-    // Link instead — it navigates to the product on the shop subdomain, where
-    // cart/session actually live, rather than adding to the wrong origin's cart.
-    if (external) return;
     e.preventDefault();
     e.stopPropagation();
     setQuickAddOpen(true);
@@ -131,14 +127,16 @@ export function ProductCard({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={openQuickAdd}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)] active:scale-95"
-          >
-            <ShoppingCart className="h-3.5 w-3.5" />
-            Add to Cart
-          </button>
+          {!external && (
+            <button
+              type="button"
+              onClick={openQuickAdd}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)] active:scale-95"
+            >
+              <ShoppingCart className="h-3.5 w-3.5" />
+              Add to Cart
+            </button>
+          )}
         </div>
       </Link>
 

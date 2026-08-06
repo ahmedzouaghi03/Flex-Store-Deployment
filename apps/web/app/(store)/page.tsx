@@ -21,7 +21,7 @@ export default async function HomePage() {
   ]);
   const products = featured.success ? (featured.data ?? []) : [];
   const settings = settingsResult.success ? settingsResult.data : null;
-  const shopHref = subdomainHref("/shop", "shop", host);
+  const shopHref = subdomainHref("/", "shop", host);
   const shopHrefBase = subdomainHref("", "shop", host);
 
   const hero = {
