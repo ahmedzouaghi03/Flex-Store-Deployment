@@ -1,7 +1,14 @@
 import { ProductCard } from "./ProductCard";
 import type { SerializedProduct } from "@/types";
 
-export function ProductGrid({ products }: { products: SerializedProduct[] }) {
+export function ProductGrid({
+  products,
+  hrefBase = "",
+}: {
+  products: SerializedProduct[];
+  /** Origin prefix (e.g. "//shop.flex-tn.com") to link products to the shop subdomain. */
+  hrefBase?: string;
+}) {
   if (products.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-[var(--color-border)] py-16 text-center">
@@ -13,7 +20,7 @@ export function ProductGrid({ products }: { products: SerializedProduct[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} hrefBase={hrefBase} />
       ))}
     </div>
   );

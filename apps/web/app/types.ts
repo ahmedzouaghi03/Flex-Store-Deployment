@@ -23,6 +23,8 @@ export type AdminProductDetail = {
   colorImages: ColorImage[];
   isPublished: boolean;
   isFeatured: boolean;
+  categoryId: string | null;
+  categoryName: string | null;
 };
 
 export type ProductInput = {
@@ -32,6 +34,29 @@ export type ProductInput = {
   colorImages: ColorImage[];  // each color owns its sizes+stock
   isPublished: boolean;
   isFeatured: boolean;
+  categoryId: string | null;
+};
+
+// ─── Category types ───────────────────────────────────────────────────────────
+
+export type AdminCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image: string | null;
+  order: number;
+  isActive: boolean;
+  productCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CategoryInput = {
+  name: string;
+  description?: string;
+  image?: string;
+  isActive: boolean;
 };
 
 // ─── Shared action result ─────────────────────────────────────────────────────

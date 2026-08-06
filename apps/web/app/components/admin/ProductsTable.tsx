@@ -17,7 +17,7 @@ import { formatPrice } from "@/lib/utils";
 import { ConfirmDialog } from "./ConfirmDialog";
 import type { AdminProductDetail } from "@/types";
 
-type Row = AdminProductDetail & { brandName: string | null };
+type Row = AdminProductDetail;
 
 function thumbnailUrl(product: Row): string | null {
   // main product photos take priority; fall back to the first color's first
@@ -469,7 +469,12 @@ export function ProductsTable({ products: initial }: { products: Row[] }) {
                         ) : (
                           <div className="h-12 w-12 shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]" />
                         )}
-                        {renderName(product)}
+                        <div className="min-w-0">
+                          {renderName(product)}
+                          <p className="mt-0.5 truncate text-xs text-[var(--color-muted)]">
+                            {product.categoryName ?? "Uncategorized"}
+                          </p>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 font-semibold text-[var(--color-text)]">{renderPrice(product)}</td>
@@ -510,7 +515,12 @@ export function ProductsTable({ products: initial }: { products: Row[] }) {
               )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">{renderName(product)}</div>
+                  <div className="min-w-0">
+                    {renderName(product)}
+                    <p className="mt-0.5 truncate text-xs text-[var(--color-muted)]">
+                      {product.categoryName ?? "Uncategorized"}
+                    </p>
+                  </div>
                   <div className="flex shrink-0 items-center gap-1">{renderRowActions(product)}</div>
                 </div>
                 <div className="mt-1 text-sm">{renderPrice(product)}</div>

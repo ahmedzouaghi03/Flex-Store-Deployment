@@ -1,30 +1,37 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Home, Store, Info, Mail } from "lucide-react";
+import { subdomainHref } from "@/lib/subdomain";
 
 export function NavLinks({ vertical = false }: { vertical?: boolean }) {
   const pathname = usePathname();
   const t = useTranslations("Nav");
 
+  // Empty until mount so SSR and the first client render match (no host yet);
+  // corrected right after via the effect below.
+  const [host, setHost] = useState("");
+  useEffect(() => setHost(window.location.host), []);
+
   const LINKS = [
-    { href: "/",         label: t("Home"),    icon: Home },
-    { href: "/shop",     label: t("Shop"),    icon: Store },
-    { href: "/about",   label: t("About"),   icon: Info },
-    { href: "/contact", label: t("Contact"), icon: Mail },
+    { path: "/",        href: subdomainHref("/", "www", host),        label: t("Home"),    icon: Home },
+    { path: "/shop",    href: subdomainHref("/shop", "shop", host),   label: t("Shop"),    icon: Store },
+    { path: "/about",   href: subdomainHref("/about", "www", host),   label: t("About"),   icon: Info },
+    { path: "/contact", href: subdomainHref("/contact", "www", host), label: t("Contact"), icon: Mail },
   ];
 
   if (vertical) {
     return (
       <div className="flex flex-col gap-1">
-        {LINKS.map(({ href, label, icon: Icon }) => {
+        {LINKS.map(({ path, href, label, icon: Icon }) => {
           const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
+            path === "/" ? pathname === "/" : pathname.startsWith(path);
           return (
             <Link
-              key={href}
+              key={path}
               href={href}
               className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-150 ${
                 active
@@ -43,12 +50,12 @@ export function NavLinks({ vertical = false }: { vertical?: boolean }) {
 
   return (
     <div className="flex items-center gap-1 rounded-2xl bg-[var(--color-bg)] p-1 border border-[var(--color-border)]">
-      {LINKS.map(({ href, label, icon: Icon }) => {
+      {LINKS.map(({ path, href, label, icon: Icon }) => {
         const active =
-          href === "/" ? pathname === "/" : pathname.startsWith(href);
+          path === "/" ? pathname === "/" : pathname.startsWith(path);
         return (
           <Link
-            key={href}
+            key={path}
             href={href}
             className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-150 ${
               active

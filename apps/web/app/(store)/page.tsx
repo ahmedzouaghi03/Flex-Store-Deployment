@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { ArrowRight, Play, Feather, Leaf, Zap, Star } from "lucide-react";
 
 import { getFeaturedProducts } from "@/actions/productActions";
@@ -8,16 +9,20 @@ import { AutoPlayVideo } from "@/components/store/AutoPlayVideo";
 import { getStoreSettings } from "@/actions/storeSettingsActions";
 import { DEFAULT_HERO, DEFAULT_VIDEO, DEFAULT_FOOTER_CTA, DEFAULT_COLLECTION, DEFAULT_USPS } from "@/types";
 import { Reveal } from "@/components/store/Reveal";
+import { subdomainHref } from "@/lib/subdomain";
 
 const USP_ICONS = [Feather, Leaf, Zap, Star];
 
 export default async function HomePage() {
-  const [featured, settingsResult] = await Promise.all([
+  const [featured, settingsResult, host] = await Promise.all([
     getFeaturedProducts(),
     getStoreSettings(),
+    headers().then((h) => h.get("host") ?? ""),
   ]);
   const products = featured.success ? (featured.data ?? []) : [];
   const settings = settingsResult.success ? settingsResult.data : null;
+  const shopHref = subdomainHref("/shop", "shop", host);
+  const shopHrefBase = subdomainHref("", "shop", host);
 
   const hero = {
     badge: settings?.heroBadge ?? DEFAULT_HERO.badge,
@@ -103,7 +108,7 @@ export default async function HomePage() {
               </p>
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link
-                  href="/shop"
+                  href={shopHref}
                   className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-[var(--color-green)] shadow-[0_8px_30px_rgba(0,0,0,0.25)] transition hover:scale-105"
                 >
                   {hero.cta1}
@@ -201,14 +206,14 @@ export default async function HomePage() {
               <p className="mt-1 text-sm text-[var(--color-muted)]">{collection.desc}</p>
             </div>
             <Link
-              href="/shop"
+              href={shopHref}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-accent)] transition hover:text-[var(--color-green-mid)]"
             >
               View all <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Reveal>
           <Reveal delay={120}>
-            <ProductGrid products={products} />
+            <ProductGrid products={products} hrefBase={shopHrefBase} />
           </Reveal>
         </div>
       </section>
@@ -223,7 +228,7 @@ export default async function HomePage() {
           <h2 className="text-3xl font-black text-white md:text-5xl">{footerCta.title}</h2>
           <p className="mt-4 text-white/60">{footerCta.desc}</p>
           <Link
-            href="/shop"
+            href={shopHref}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-green-bright)] px-10 py-4 text-sm font-bold text-[var(--color-green-dark)] shadow-[0_8px_30px_rgba(158,212,58,0.3)] transition hover:scale-105"
           >
             {footerCta.btn} <ArrowRight className="h-4 w-4" />

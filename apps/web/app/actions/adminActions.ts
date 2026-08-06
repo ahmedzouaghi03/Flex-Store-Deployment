@@ -19,7 +19,7 @@ function toSlug(text: string): string {
 }
 
 const ADMIN_INCLUDE = {
-  category: { select: { name: true } },
+  category: { select: { id: true, name: true } },
   images: { orderBy: { order: "asc" as const } },
   colors: {
     orderBy: { order: "asc" as const },
@@ -30,9 +30,7 @@ const ADMIN_INCLUDE = {
   },
 } as const;
 
-function productToAdminDetail(
-  p: any,
-): AdminProductDetail & { brandName: string | null } {
+function productToAdminDetail(p: any): AdminProductDetail {
   const images: string[] = (p.images ?? []).map((i: any) => i.url);
   const colorImages: ColorImage[] = p.colors.map((c: any) => ({
     name: c.name,
@@ -50,13 +48,12 @@ function productToAdminDetail(
     colorImages,
     isPublished: p.isPublished,
     isFeatured: p.isFeatured,
-    brandName: p.category?.name ?? null,
+    categoryId: p.categoryId ?? null,
+    categoryName: p.category?.name ?? null,
   };
 }
 
-export async function getAdminProducts(): Promise<
-  ActionResult<(AdminProductDetail & { brandName: string | null })[]>
-> {
+export async function getAdminProducts(): Promise<ActionResult<AdminProductDetail[]>> {
   try {
     const products = await db.product.findMany({
       orderBy: { createdAt: "desc" },
@@ -112,6 +109,7 @@ export async function createProduct(
         basePrice,
         isPublished: data.isPublished,
         isFeatured: data.isFeatured,
+        categoryId: data.categoryId || null,
         images: {
           create: data.images.map((url, idx) => ({ url, order: idx })),
         },
@@ -159,6 +157,7 @@ export async function updateProduct(
         basePrice,
         isPublished: data.isPublished,
         isFeatured: data.isFeatured,
+        categoryId: data.categoryId || null,
         images: {
           create: data.images.map((url, idx) => ({ url, order: idx })),
         },

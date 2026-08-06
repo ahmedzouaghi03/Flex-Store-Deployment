@@ -8,9 +8,17 @@ import { formatPrice } from "@/lib/utils";
 import type { SerializedProduct } from "@/types";
 import { QuickAddModal } from "./QuickAddModal";
 
-export function ProductCard({ product }: { product: SerializedProduct }) {
+export function ProductCard({
+  product,
+  hrefBase = "",
+}: {
+  product: SerializedProduct;
+  /** Origin prefix (e.g. "//shop.flex-tn.com") to link this product to the shop subdomain. */
+  hrefBase?: string;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const external = hrefBase !== "";
 
   // top-level product images are rare in practice — most products only carry
   // per-color images, so fall back to those (same convention as ProductGallery).
@@ -37,6 +45,10 @@ export function ProductCard({ product }: { product: SerializedProduct }) {
   }
 
   function openQuickAdd(e: React.MouseEvent) {
+    // On the marketing domain, let the click fall through to the surrounding
+    // Link instead — it navigates to the product on the shop subdomain, where
+    // cart/session actually live, rather than adding to the wrong origin's cart.
+    if (external) return;
     e.preventDefault();
     e.stopPropagation();
     setQuickAddOpen(true);
@@ -45,7 +57,7 @@ export function ProductCard({ product }: { product: SerializedProduct }) {
   return (
     <>
       <Link
-        href={`/product/${product.slug}`}
+        href={`${hrefBase}/product/${product.slug}`}
         className="group block overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm transition hover:shadow-md hover:border-[var(--color-green-light)]"
       >
         <div className="relative aspect-square overflow-hidden bg-[var(--color-bg)]">

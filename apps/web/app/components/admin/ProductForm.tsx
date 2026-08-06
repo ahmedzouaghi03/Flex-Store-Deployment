@@ -2,11 +2,13 @@
 
 import { useState, useTransition, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Loader2, Link as LinkIcon, Upload, Copy, Images } from "lucide-react";
+import { Plus, X, Loader2, Link as LinkIcon, Upload, Copy, Images, ChevronDown } from "lucide-react";
 
 import { createProduct, updateProduct } from "@/actions/adminActions";
 import { ImagePickerModal } from "./ImagePickerModal";
 import type { AdminProductDetail } from "@/types";
+
+type CategoryOption = { id: string; name: string; isActive: boolean };
 
 type SizeEntry = { size: string; stock: number };
 type ColorRow = {
@@ -181,12 +183,19 @@ function SizesEditor({
 }
 
 // ── Main form ─────────────────────────────────────────────────────────────────
-export function ProductForm({ initialData }: { initialData?: AdminProductDetail }) {
+export function ProductForm({
+  initialData,
+  categories = [],
+}: {
+  initialData?: AdminProductDetail;
+  categories?: CategoryOption[];
+}) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
   const [name, setName]     = useState(initialData?.name ?? "");
   const [price, setPrice]   = useState(initialData ? String(initialData.priceCents / 100) : "");
+  const [categoryId, setCategoryId] = useState(initialData?.categoryId ?? "");
   const [isPublished, setIsPublished] = useState(initialData?.isPublished ?? true);
   const [isFeatured, setIsFeatured]   = useState(initialData?.isFeatured ?? false);
   const [submitting, setSubmitting]   = useState(false);
@@ -369,6 +378,7 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
       })),
       isPublished,
       isFeatured,
+      categoryId: categoryId || null,
     };
 
     startTransition(async () => {
@@ -401,6 +411,26 @@ export function ProductForm({ initialData }: { initialData?: AdminProductDetail 
       {/* Price */}
       <Field label="Base Price (DT)">
         <input type="number" min="0" step="0.001" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 89.900" className={inp} />
+      </Field>
+
+      {/* Category */}
+      <Field label="Category">
+        <div className="relative">
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={`${inp} appearance-none pr-8`}
+          >
+            <option value="">No category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+                {!c.isActive ? " (hidden)" : ""}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-muted)]" />
+        </div>
       </Field>
 
       {/* Main Product Photos */}

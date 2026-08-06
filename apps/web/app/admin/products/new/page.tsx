@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { getAdminCategories } from "@/actions/categoryActions";
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+  const result = await getAdminCategories();
+  const categories = result.success ? (result.data ?? []) : [];
+
   return (
     <div>
       <Link
@@ -16,7 +20,7 @@ export default function NewProductPage() {
       <p className="mb-8 text-sm text-[var(--color-muted)]">
         Fill in the details. The shoe will appear in the store once published.
       </p>
-      <ProductForm />
+      <ProductForm categories={categories} />
     </div>
   );
 }
