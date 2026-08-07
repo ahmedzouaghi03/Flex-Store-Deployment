@@ -204,6 +204,7 @@ export async function createOrder(
 
     revalidatePath("/admin/orders");
     revalidatePath("/shop");
+    revalidatePath("/");
     return { success: true, data: { orderId: order.id, orderNumber: order.orderNumber } };
   } catch (error) {
     console.error("[ORDER] create error:", error);

@@ -36,8 +36,20 @@ export async function middleware(req: NextRequest) {
   // Generic host check — no env config needed, works the same in prod and locally.
   const hostname = req.headers.get("host")?.split(":")[0] ?? "";
   const onShop = hostname.startsWith("shop.");
+
+  // The unfiltered listing's one canonical URL is the shop root — bare /shop (no
+  // filters) permanently redirects there so it isn't indexed as a duplicate.
+  // Filtered views (?category=/?search=) keep living at /shop, untouched.
+  if (onShop && pathname === "/shop" && req.nextUrl.search === "") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url, 308);
+  }
+
   if (onShop && pathname === "/") {
-    return NextResponse.rewrite(new URL("/shop", req.url));
+    // Preserve the query string so a search/category filter submitted while already on
+    // the root (e.g. from the search box) still reaches the listing correctly.
+    return NextResponse.rewrite(new URL(`/shop${req.nextUrl.search}`, req.url));
   }
 
   // Product browsing, cart, and checkout only live on the shop subdomain — keeps

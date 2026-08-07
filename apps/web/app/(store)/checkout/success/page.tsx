@@ -147,7 +147,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: Sear
       {/* Actions */}
       <div className="flex justify-center gap-3">
         <Link
-          href="/shop"
+          href="/"
           className="rounded-xl border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold text-[var(--color-text)] transition hover:bg-[var(--color-bg)]"
         >
           Continue Shopping

@@ -1,15 +1,21 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Package, UserCircle, LogIn, UserPlus, LogOut } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { getSession } from "@/lib/session";
 import { logoutUser } from "@/actions/customerAuthActions";
 import { db } from "@shoestore/db";
 import { formatPrice } from "@/lib/utils";
+import { subdomainHref } from "@/lib/subdomain";
 import { OrderStatusBadge } from "@/components/admin/OrderStatusBadge";
 
 export default async function AccountPage() {
-  const session = await getSession();
-  const t = await getTranslations("Account");
+  const [session, t, host] = await Promise.all([
+    getSession(),
+    getTranslations("Account"),
+    headers().then((h) => h.get("host") ?? ""),
+  ]);
+  const shopHref = subdomainHref("/", "shop", host);
 
   if (!session) {
     return (
@@ -94,7 +100,7 @@ export default async function AccountPage() {
         {orders.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[var(--color-border)] py-12 text-center text-sm text-[var(--color-muted)]">
             {t("NoOrders")}{" "}
-            <Link href="/shop" className="font-semibold text-[var(--color-accent)] hover:underline">
+            <Link href={shopHref} className="font-semibold text-[var(--color-accent)] hover:underline">
               {t("StartShopping")}
             </Link>
           </div>

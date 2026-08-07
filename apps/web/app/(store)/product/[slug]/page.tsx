@@ -91,7 +91,7 @@ export default async function ProductPage({
 
   const breadcrumbItems = [
     { name: "Home", url: `${apexBaseUrl}/` },
-    { name: "Shop", url: `${baseUrl}/shop` },
+    { name: "Shop", url: `${baseUrl}/` },
     ...(product.category
       ? [{ name: product.category.name, url: `${baseUrl}/shop?category=${product.category.slug}` }]
       : []),
@@ -104,7 +104,7 @@ export default async function ProductPage({
       <JsonLd data={breadcrumbJsonLd(breadcrumbItems)} />
 
       <Link
-        href="/shop"
+        href="/"
         className="mb-6 inline-flex items-center gap-1 text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
       >
         <ChevronLeft className="h-4 w-4" />

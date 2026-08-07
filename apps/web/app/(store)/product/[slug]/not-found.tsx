@@ -8,7 +8,7 @@ export default function ProductNotFound() {
         This shoe may have been removed or is not published yet.
       </p>
       <Link
-        href="/shop"
+        href="/"
         className="mt-6 inline-block text-[var(--color-accent)] hover:underline"
       >
         Back to shop

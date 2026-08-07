@@ -27,7 +27,7 @@ export default function CartPage() {
         <h1 className="mt-4 text-2xl font-bold text-[var(--color-text)]">{t("Empty")}</h1>
         <p className="mt-2 text-[var(--color-muted)]">{t("EmptyDesc")}</p>
         <Link
-          href="/shop"
+          href="/"
           className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-6 py-3 text-sm font-bold text-white transition hover:bg-[var(--color-green-mid)]"
         >
           {t("Continue")} <ArrowRight className="h-4 w-4" />
@@ -155,7 +155,7 @@ export default function CartPage() {
             </Link>
 
             <Link
-              href="/shop"
+              href="/"
               className="block text-center text-sm text-[var(--color-muted)] transition hover:text-[var(--color-text)]"
             >
               {t("Continue")}

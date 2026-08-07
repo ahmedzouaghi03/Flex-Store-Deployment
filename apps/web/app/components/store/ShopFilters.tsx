@@ -14,7 +14,8 @@ function buildShopUrl(params: Record<string, string | undefined>) {
     if (v) q.set(k, v);
   });
   const s = q.toString();
-  return s ? `/shop?${s}` : "/shop";
+  // No filters at all — link straight to the canonical shop root, skipping the /shop redirect.
+  return s ? `/shop?${s}` : "/";
 }
 
 export function ShopFilters({ categories, current }: ShopFiltersProps) {

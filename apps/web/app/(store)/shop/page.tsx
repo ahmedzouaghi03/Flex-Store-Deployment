@@ -39,8 +39,9 @@ export async function generateMetadata({
   let keywords: string | undefined;
   // A pure category filter (no search term) gets its own canonical URL and sitemap entry —
   // matches app/sitemap.ts. Combined with a search term, or an unknown slug, it's a
-  // transient filtered view that canonicalizes back to plain /shop.
-  let url = `${baseUrl}/shop`;
+  // transient filtered view that canonicalizes back to the shop root (the one canonical
+  // URL for the unfiltered listing — bare /shop permanently redirects there).
+  let url = `${baseUrl}/`;
 
   if (params.category) {
     const categoryResult = await getCategoryBySlug(params.category);
@@ -103,7 +104,7 @@ export default async function ShopPage({
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", url: `${apexBaseUrl}/` },
-          { name: "Shop", url: `${baseUrl}/shop` },
+          { name: "Shop", url: `${baseUrl}/` },
         ])}
       />
       <div className="mb-8">

@@ -40,7 +40,7 @@ async function shopSitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   return [
-    { url: `${shopUrl}/shop`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${shopUrl}/`, changeFrequency: "daily", priority: 0.9 },
     ...categoryEntries,
     ...productEntries,
   ];
