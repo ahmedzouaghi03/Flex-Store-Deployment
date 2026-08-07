@@ -11,15 +11,23 @@ export function ImagePickerModal({
   alreadySelected,
   onConfirm,
   onClose,
+  mode = "multi",
 }: {
   images: string[];
   alreadySelected: string[];
   onConfirm: (urls: string[]) => void;
   onClose: () => void;
+  /** "single" picks and confirms immediately on click — for one-image fields like an OG image override. */
+  mode?: "multi" | "single";
 }) {
   const [selected, setSelected] = useState<string[]>([]);
 
   function toggle(url: string) {
+    if (mode === "single") {
+      onConfirm([url]);
+      onClose();
+      return;
+    }
     setSelected((prev) => (prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]));
   }
 
@@ -95,7 +103,11 @@ export function ImagePickerModal({
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--color-border)] px-5 py-4">
-          <p className="text-xs text-[var(--color-muted)]">{selected.length} selected</p>
+          {mode === "single" ? (
+            <p className="text-xs text-[var(--color-muted)]">Click an image to select it</p>
+          ) : (
+            <p className="text-xs text-[var(--color-muted)]">{selected.length} selected</p>
+          )}
           <div className="flex gap-2">
             <button
               type="button"
@@ -104,18 +116,20 @@ export function ImagePickerModal({
             >
               Cancel
             </button>
-            <button
-              type="button"
-              disabled={selected.length === 0}
-              onClick={() => {
-                onConfirm(selected);
-                onClose();
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)] disabled:opacity-40"
-            >
-              <ImagePlus className="h-3.5 w-3.5" />
-              Add{selected.length > 0 ? ` (${selected.length})` : ""}
-            </button>
+            {mode === "multi" && (
+              <button
+                type="button"
+                disabled={selected.length === 0}
+                onClick={() => {
+                  onConfirm(selected);
+                  onClose();
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[var(--color-green-mid)] disabled:opacity-40"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Add{selected.length > 0 ? ` (${selected.length})` : ""}
+              </button>
+            )}
           </div>
         </div>
       </div>

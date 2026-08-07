@@ -41,6 +41,10 @@ function VariantEditor({
     }
     setOpen(true);
     if (colors) return;
+    if (!item.productId) {
+      setError("The original product was deleted — the variant can no longer be changed.");
+      return;
+    }
     setLoading(true);
     const res = await getProductColors(item.productId);
     setLoading(false);
@@ -69,7 +73,8 @@ function VariantEditor({
       <button
         type="button"
         onClick={toggle}
-        disabled={isPending}
+        disabled={isPending || (!item.productId && !open)}
+        title={!item.productId ? "The original product was deleted" : undefined}
         className="inline-flex items-center gap-1 text-xs text-[var(--color-muted)] transition hover:text-[var(--color-text)] disabled:opacity-40"
       >
         <Pencil className="h-3 w-3" /> {open ? "Close" : "Change"}

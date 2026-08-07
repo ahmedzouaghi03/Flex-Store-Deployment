@@ -2,7 +2,39 @@ import { ShieldCheck, Truck, RefreshCw, Headphones, Star, Users, Leaf } from "lu
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { subdomainHref } from "@/lib/subdomain";
+import { getBaseUrl, getSiteIdentity, DEFAULT_OG_IMAGE_PATH } from "@/lib/seo";
+
+const ABOUT_TITLE = "About Us";
+const ABOUT_DESCRIPTION =
+  "Découvrez l'histoire de Flex Comfort Shoes : des chaussures, claquettes et produits orthopédiques pensés pour le confort, conçus pour la Tunisie.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [baseUrl, identity] = await Promise.all([getBaseUrl(), getSiteIdentity()]);
+  const url = `${baseUrl}/about`;
+  const image = identity.seo.ogImage ?? `${baseUrl}${DEFAULT_OG_IMAGE_PATH}`;
+
+  return {
+    title: ABOUT_TITLE,
+    description: ABOUT_DESCRIPTION,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      title: ABOUT_TITLE,
+      description: ABOUT_DESCRIPTION,
+      url,
+      siteName: identity.storeName,
+      images: [{ url: image, width: 1200, height: 1200 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ABOUT_TITLE,
+      description: ABOUT_DESCRIPTION,
+      images: [image],
+    },
+  };
+}
 
 const VALUES = [
   {

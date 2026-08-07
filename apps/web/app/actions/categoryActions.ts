@@ -23,6 +23,10 @@ function toAdminCategory(c: {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  ogImage: string | null;
   _count: { products: number };
 }): AdminCategory {
   return {
@@ -36,6 +40,10 @@ function toAdminCategory(c: {
     productCount: c._count.products,
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
+    seoTitle: c.seoTitle,
+    seoDescription: c.seoDescription,
+    seoKeywords: c.seoKeywords,
+    ogImage: c.ogImage,
   };
 }
 
@@ -79,6 +87,10 @@ export async function createCategory(data: CategoryInput): Promise<ActionResult<
         image: data.image?.trim() || null,
         isActive: data.isActive,
         order: (maxOrder._max.order ?? -1) + 1,
+        seoTitle: data.seoTitle?.trim() || null,
+        seoDescription: data.seoDescription?.trim() || null,
+        seoKeywords: data.seoKeywords?.trim() || null,
+        ogImage: data.ogImage?.trim() || null,
       },
     });
 
@@ -114,6 +126,10 @@ export async function updateCategory(id: string, data: CategoryInput): Promise<A
         description: data.description?.trim() || null,
         image: data.image?.trim() || null,
         isActive: data.isActive,
+        seoTitle: data.seoTitle?.trim() || null,
+        seoDescription: data.seoDescription?.trim() || null,
+        seoKeywords: data.seoKeywords?.trim() || null,
+        ogImage: data.ogImage?.trim() || null,
       },
     });
 

@@ -6,6 +6,8 @@ import { Plus, X, Loader2, Link as LinkIcon, Upload, Copy, Images, ChevronDown }
 
 import { createProduct, updateProduct } from "@/actions/adminActions";
 import { ImagePickerModal } from "./ImagePickerModal";
+import { SeoFieldsEditor, EMPTY_SEO_FIELDS, type SeoFieldsValue } from "./SeoFieldsEditor";
+import { generateSeoFields } from "@/lib/seoAutofill";
 import type { AdminProductDetail } from "@/types";
 
 type CategoryOption = { id: string; name: string; isActive: boolean };
@@ -202,6 +204,17 @@ export function ProductForm({
   const [uploading, setUploading]     = useState(false);
   const [error, setError]             = useState("");
 
+  const [seoFields, setSeoFields] = useState<SeoFieldsValue>(
+    initialData
+      ? {
+          seoTitle: initialData.seoTitle ?? "",
+          seoDescription: initialData.seoDescription ?? "",
+          seoKeywords: initialData.seoKeywords ?? "",
+          ogImage: initialData.ogImage ?? "",
+        }
+      : EMPTY_SEO_FIELDS,
+  );
+
   // ── Main product photos ─────────────────────────────────────────────────
   const [mainImages, setMainImages] = useState<string[]>(initialData?.images ?? []);
   const [mainUrlInput, setMainUrlInput] = useState("");
@@ -245,8 +258,9 @@ export function ProductForm({
   const colorFileRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
   // ── Reuse-existing-image picker ──────────────────────────────────────────
-  // "main" targets the main product photos list; any other value is a color row id.
-  const [pickerTarget, setPickerTarget] = useState<"main" | string | null>(null);
+  // "main" targets the main product photos list, "seo" targets the SEO OG image override,
+  // any other value is a color row id.
+  const [pickerTarget, setPickerTarget] = useState<"main" | "seo" | string | null>(null);
 
   const allUploadedImages = useMemo(() => {
     const seen = new Set<string>();
@@ -263,11 +277,15 @@ export function ProductForm({
   const pickerAlreadySelected =
     pickerTarget === "main"
       ? mainImages
-      : (colorRows.find((r) => r.id === pickerTarget)?.imageUrls ?? []);
+      : pickerTarget === "seo"
+        ? (seoFields.ogImage ? [seoFields.ogImage] : [])
+        : (colorRows.find((r) => r.id === pickerTarget)?.imageUrls ?? []);
 
   function handlePickerConfirm(urls: string[]) {
     if (pickerTarget === "main") {
       setMainImages((prev) => [...prev, ...urls.filter((u) => !prev.includes(u))]);
+    } else if (pickerTarget === "seo") {
+      setSeoFields((prev) => ({ ...prev, ogImage: urls[0] ?? prev.ogImage }));
     } else if (pickerTarget) {
       const targetId = pickerTarget;
       setColorRows((prev) =>
@@ -379,6 +397,10 @@ export function ProductForm({
       isPublished,
       isFeatured,
       categoryId: categoryId || null,
+      seoTitle: seoFields.seoTitle.trim() || undefined,
+      seoDescription: seoFields.seoDescription.trim() || undefined,
+      seoKeywords: seoFields.seoKeywords.trim() || undefined,
+      ogImage: seoFields.ogImage.trim() || undefined,
     };
 
     startTransition(async () => {
@@ -667,6 +689,21 @@ export function ProductForm({
         </button>
       </div>
 
+      {/* SEO */}
+      <SeoFieldsEditor
+        value={seoFields}
+        onChange={setSeoFields}
+        onUploadImage={uploadToImgbb}
+        onSelectExisting={() => setPickerTarget("seo")}
+        hasExistingImages={allUploadedImages.length > 0}
+        onAutoFill={() => {
+          const categoryName = categories.find((c) => c.id === categoryId)?.name ?? null;
+          const colorNames = colorRows.map((r) => r.name).filter(Boolean);
+          setSeoFields((prev) => ({ ...prev, ...generateSeoFields({ name, categoryName, colorNames }) }));
+        }}
+        entityLabel="product"
+      />
+
       {/* Visibility */}
       <div className="rounded-xl border border-[var(--color-border)] bg-white p-5 space-y-3">
         <label className="flex cursor-pointer items-center gap-3">
@@ -699,6 +736,7 @@ export function ProductForm({
       <ImagePickerModal
         images={allUploadedImages}
         alreadySelected={pickerAlreadySelected}
+        mode={pickerTarget === "seo" ? "single" : "multi"}
         onConfirm={handlePickerConfirm}
         onClose={() => setPickerTarget(null)}
       />

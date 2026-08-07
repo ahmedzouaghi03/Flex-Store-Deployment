@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import type { Metadata } from "next";
 import { ArrowRight, Play, Feather, Leaf, Zap, Star } from "lucide-react";
 
 import { getFeaturedProducts } from "@/actions/productActions";
@@ -10,8 +11,17 @@ import { getStoreSettings } from "@/actions/storeSettingsActions";
 import { DEFAULT_HERO, DEFAULT_VIDEO, DEFAULT_FOOTER_CTA, DEFAULT_COLLECTION, DEFAULT_USPS } from "@/types";
 import { Reveal } from "@/components/store/Reveal";
 import { subdomainHref } from "@/lib/subdomain";
+import { getBaseUrl } from "@/lib/seo";
 
 const USP_ICONS = [Feather, Leaf, Zap, Star];
+
+// Title/description/OG/Twitter come from the root layout's global SEO settings —
+// the home page IS the content those settings describe. Only the canonical URL
+// is page-specific (host-aware: apex domain, self-referencing).
+export async function generateMetadata(): Promise<Metadata> {
+  const baseUrl = await getBaseUrl();
+  return { alternates: { canonical: `${baseUrl}/` } };
+}
 
 export default async function HomePage() {
   const [featured, settingsResult, host] = await Promise.all([

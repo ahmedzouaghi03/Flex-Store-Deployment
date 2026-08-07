@@ -76,6 +76,12 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // ── SEO overrides — fall back to auto-generated values from category data when empty ──
+  seoTitle       String?
+  seoDescription String? @db.Text
+  seoKeywords    String?
+  ogImage        String?
+
   products Product[]
 
   @@index([slug])
@@ -96,6 +102,12 @@ model Product {
 
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // ── SEO overrides — fall back to auto-generated values from product data when empty ──
+  seoTitle       String?
+  seoDescription String? @db.Text
+  seoKeywords    String?
+  ogImage        String?
 
   images     ProductImage[]
   colors     ProductColor[]
@@ -214,11 +226,14 @@ model OrderItem {
   orderId String
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  // Nullable + SetNull: OrderItem already snapshots productName/colorName/size/productImage
+  // for display, so a deleted product/variant just detaches here — past orders keep
+  // rendering correctly instead of blocking the product/variant from ever being removed.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
-  variantId String
-  variant   ProductColorSize @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  variantId String?
+  variant   ProductColorSize? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
   @@index([productId])
@@ -268,6 +283,20 @@ model StoreSettings {
   contactPhone        String? @default("+216 XX XXX XXX")
   contactLocation     String? @default("Tunisia")
   contactResponseTime String? @default("Within 24 hours")
+
+  // ── SEO & Référencement ──────────────────────────────────────────────────
+  orgName               String? @default("Flex Comfort Shoes")
+  seoTitle              String? @default("Flex Comfort Shoes — Chaussures confortables, claquettes & semelles orthopédiques en Tunisie")
+  seoDescription        String? @default("Découvrez notre collection de chaussures confortables, claquettes et produits orthopédiques avec livraison rapide partout en Tunisie.") @db.Text
+  seoKeywords           String? @default("chaussures confortables tunisie, claquettes tunisie, chaussures orthopédiques, semelles orthopédiques, sandales tunisie")
+  seoCanonicalUrl       String?
+  seoOgTitle            String?
+  seoOgDescription      String? @db.Text
+  seoOgImage            String?
+  seoTwitterTitle       String?
+  seoTwitterDescription String? @db.Text
+  seoTwitterImage       String?
+  seoIndexingEnabled    Boolean @default(true)
 
   updatedAt DateTime @updatedAt
 

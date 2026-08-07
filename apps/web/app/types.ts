@@ -14,6 +14,20 @@ export type ColorImage = {
   sizes: SizeStock[];  // per-color stock per size
 };
 
+export type SeoFields = {
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  ogImage: string | null;
+};
+
+export type SeoFieldsInput = {
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  ogImage?: string;
+};
+
 export type AdminProductDetail = {
   id: string;
   name: string;
@@ -25,7 +39,7 @@ export type AdminProductDetail = {
   isFeatured: boolean;
   categoryId: string | null;
   categoryName: string | null;
-};
+} & SeoFields;
 
 export type ProductInput = {
   name: string;
@@ -35,7 +49,7 @@ export type ProductInput = {
   isPublished: boolean;
   isFeatured: boolean;
   categoryId: string | null;
-};
+} & SeoFieldsInput;
 
 // ─── Category types ───────────────────────────────────────────────────────────
 
@@ -50,14 +64,14 @@ export type AdminCategory = {
   productCount: number;
   createdAt: string;
   updatedAt: string;
-};
+} & SeoFields;
 
 export type CategoryInput = {
   name: string;
   description?: string;
   image?: string;
   isActive: boolean;
-};
+} & SeoFieldsInput;
 
 // ─── Shared action result ─────────────────────────────────────────────────────
 
@@ -141,7 +155,17 @@ export type SerializedProduct = {
   colors: SerializedProductColor[];
   createdAt: string;
   updatedAt: string;
-};
+} & SeoFields;
+
+// ─── Public category SEO lookup (used for /shop?category= metadata) ──────────
+
+export type SeoCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image: string | null;
+} & SeoFields;
 
 // ─── Order types ──────────────────────────────────────────────────────────────
 
@@ -158,8 +182,8 @@ export type DiscountType = "PERCENTAGE" | "FIXED";
 
 export type SerializedOrderItem = {
   id: string;
-  variantId: string;
-  productId: string;
+  variantId: string | null;  // null once the underlying variant/product has been deleted
+  productId: string | null;
   productName: string;
   colorName: string;
   size: string;
@@ -309,6 +333,34 @@ export type SerializedStoreSettings = {
   contactLocation: string | null;
   contactResponseTime: string | null;
   usps: StoreUspItem[];
+
+  orgName: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  seoCanonicalUrl: string | null;
+  seoOgTitle: string | null;
+  seoOgDescription: string | null;
+  seoOgImage: string | null;
+  seoTwitterTitle: string | null;
+  seoTwitterDescription: string | null;
+  seoTwitterImage: string | null;
+  seoIndexingEnabled: boolean;
+};
+
+export type SeoSettingsInput = {
+  orgName: string;
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+  seoCanonicalUrl: string;
+  seoOgTitle: string;
+  seoOgDescription: string;
+  seoOgImage: string;
+  seoTwitterTitle: string;
+  seoTwitterDescription: string;
+  seoTwitterImage: string;
+  seoIndexingEnabled: boolean;
 };
 
 export type ContactInfo = {

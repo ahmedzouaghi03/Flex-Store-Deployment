@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@shoestore/db";
-import type { ActionResult, ContactInfo, SerializedStoreSettings } from "@/types";
+import type { ActionResult, ContactInfo, SerializedStoreSettings, SeoSettingsInput } from "@/types";
 
 const DEFAULT_CONTACT: ContactInfo = {
   email: "contact@flexshoes.tn",
@@ -54,6 +54,18 @@ function serialize(s: any, usps: any[]): SerializedStoreSettings {
     contactLocation: s.contactLocation,
     contactResponseTime: s.contactResponseTime,
     usps: usps.map((u) => ({ id: u.id, label: u.label, desc: u.desc, order: u.order })),
+    orgName: s.orgName,
+    seoTitle: s.seoTitle,
+    seoDescription: s.seoDescription,
+    seoKeywords: s.seoKeywords,
+    seoCanonicalUrl: s.seoCanonicalUrl,
+    seoOgTitle: s.seoOgTitle,
+    seoOgDescription: s.seoOgDescription,
+    seoOgImage: s.seoOgImage,
+    seoTwitterTitle: s.seoTwitterTitle,
+    seoTwitterDescription: s.seoTwitterDescription,
+    seoTwitterImage: s.seoTwitterImage,
+    seoIndexingEnabled: s.seoIndexingEnabled,
   };
 }
 
@@ -190,6 +202,41 @@ export async function saveFooterSettings(data: {
   } catch (error) {
     console.error("[STORE SETTINGS] saveFooter error:", error);
     return { success: false, error: "Failed to save" };
+  }
+}
+
+export async function saveSeoSettings(data: SeoSettingsInput): Promise<ActionResult> {
+  try {
+    const orgName = data.orgName.trim();
+    const seoTitle = data.seoTitle.trim();
+    const seoDescription = data.seoDescription.trim();
+    if (!orgName) return { success: false, error: "Organization name is required" };
+    if (!seoTitle) return { success: false, error: "SEO title is required" };
+    if (!seoDescription) return { success: false, error: "SEO description is required" };
+
+    const settings = await getOrCreate();
+    await db.storeSettings.update({
+      where: { id: settings.id },
+      data: {
+        orgName,
+        seoTitle,
+        seoDescription,
+        seoKeywords: data.seoKeywords.trim() || null,
+        seoCanonicalUrl: data.seoCanonicalUrl.trim() || null,
+        seoOgTitle: data.seoOgTitle.trim() || null,
+        seoOgDescription: data.seoOgDescription.trim() || null,
+        seoOgImage: data.seoOgImage.trim() || null,
+        seoTwitterTitle: data.seoTwitterTitle.trim() || null,
+        seoTwitterDescription: data.seoTwitterDescription.trim() || null,
+        seoTwitterImage: data.seoTwitterImage.trim() || null,
+        seoIndexingEnabled: data.seoIndexingEnabled,
+      },
+    });
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("[STORE SETTINGS] saveSeoSettings error:", error);
+    return { success: false, error: "Failed to save SEO settings" };
   }
 }
 

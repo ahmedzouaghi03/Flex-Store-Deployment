@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@shoestore/db";
-import type { ActionResult, SerializedProduct, SerializedProductColor } from "@/types";
+import type { ActionResult, SerializedProduct, SerializedProductColor, SeoCategory } from "@/types";
 
 function serializeColor(color: {
   id: string;
@@ -44,6 +44,10 @@ function serializeProduct(product: {
   category: { id: string; name: string; slug: string } | null;
   images: { id: string; url: string; alt: string | null; order: number }[];
   colors: any[];
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  ogImage: string | null;
 }): SerializedProduct {
   const primaryImage =
     product.images[0]?.url ?? product.colors[0]?.images[0]?.url ?? null;
@@ -66,6 +70,10 @@ function serializeProduct(product: {
     colors: product.colors.map(serializeColor),
     createdAt: product.createdAt.toISOString(),
     updatedAt: product.updatedAt.toISOString(),
+    seoTitle: product.seoTitle,
+    seoDescription: product.seoDescription,
+    seoKeywords: product.seoKeywords,
+    ogImage: product.ogImage,
   };
 }
 
@@ -171,5 +179,30 @@ export async function getCategories(): Promise<
   } catch (error) {
     console.error("[PRODUCTS] categories error:", error);
     return { success: false, error: "Failed to load categories" };
+  }
+}
+
+export async function getCategoryBySlug(slug: string): Promise<ActionResult<SeoCategory>> {
+  if (!slug) return { success: false, error: "Category not found" };
+  try {
+    const category = await db.category.findFirst({
+      where: { slug, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        description: true,
+        image: true,
+        seoTitle: true,
+        seoDescription: true,
+        seoKeywords: true,
+        ogImage: true,
+      },
+    });
+    if (!category) return { success: false, error: "Category not found" };
+    return { success: true, data: category };
+  } catch (error) {
+    console.error("[PRODUCTS] getCategoryBySlug error:", error);
+    return { success: false, error: "Failed to load category" };
   }
 }

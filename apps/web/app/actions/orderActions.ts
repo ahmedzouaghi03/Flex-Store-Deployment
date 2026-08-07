@@ -494,7 +494,8 @@ export async function updateOrderItemQuantity(
     if (!item) return { success: false, error: "Item not found" };
 
     const delta = quantity - item.quantity;
-    if (delta > 0) {
+    // No live variant to check stock against (product/variant since deleted) — allow the edit through.
+    if (delta > 0 && item.variantId) {
       const variant = await db.productColorSize.findUnique({
         where: { id: item.variantId },
         select: { stock: true },
@@ -508,7 +509,7 @@ export async function updateOrderItemQuantity(
         where: { id: orderItemId },
         data: { quantity, totalPrice: unitPrice * quantity },
       });
-      if (delta !== 0) {
+      if (delta !== 0 && item.variantId) {
         await tx.productColorSize.update({
           where: { id: item.variantId },
           data: { stock: { decrement: delta } },
@@ -572,11 +573,13 @@ export async function updateOrderItemVariant(
           totalPrice: unitPrice * item.quantity,
         },
       });
-      // restore stock to the old variant, decrement the new one
-      await tx.productColorSize.update({
-        where: { id: item.variantId },
-        data: { stock: { increment: item.quantity } },
-      });
+      // restore stock to the old variant (if it still exists), decrement the new one
+      if (item.variantId) {
+        await tx.productColorSize.update({
+          where: { id: item.variantId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
       await tx.productColorSize.update({
         where: { id: newVariant.id },
         data: { stock: { decrement: item.quantity } },
@@ -604,10 +607,12 @@ export async function removeOrderItem(orderItemId: string): Promise<ActionResult
 
     const result = await db.$transaction(async (tx) => {
       await tx.orderItem.delete({ where: { id: orderItemId } });
-      await tx.productColorSize.update({
-        where: { id: item.variantId },
-        data: { stock: { increment: item.quantity } },
-      });
+      if (item.variantId) {
+        await tx.productColorSize.update({
+          where: { id: item.variantId },
+          data: { stock: { increment: item.quantity } },
+        });
+      }
       return recalcOrderTotals(tx, item.orderId);
     });
 

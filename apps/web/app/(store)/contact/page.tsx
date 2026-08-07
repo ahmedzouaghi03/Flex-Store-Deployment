@@ -1,6 +1,38 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import type { Metadata } from "next";
 import { ContactForm } from "@/components/store/ContactForm";
 import { getContactInfo } from "@/actions/storeConfigActions";
+import { getBaseUrl, getSiteIdentity, DEFAULT_OG_IMAGE_PATH } from "@/lib/seo";
+
+const CONTACT_TITLE = "Contact Us";
+const CONTACT_DESCRIPTION =
+  "Contactez Flex Comfort Shoes pour toute question sur une commande, un produit ou notre gamme de chaussures orthopédiques. Réponse rapide garantie.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [baseUrl, identity] = await Promise.all([getBaseUrl(), getSiteIdentity()]);
+  const url = `${baseUrl}/contact`;
+  const image = identity.seo.ogImage ?? `${baseUrl}${DEFAULT_OG_IMAGE_PATH}`;
+
+  return {
+    title: CONTACT_TITLE,
+    description: CONTACT_DESCRIPTION,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      title: CONTACT_TITLE,
+      description: CONTACT_DESCRIPTION,
+      url,
+      siteName: identity.storeName,
+      images: [{ url: image, width: 1200, height: 1200 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: CONTACT_TITLE,
+      description: CONTACT_DESCRIPTION,
+      images: [image],
+    },
+  };
+}
 
 function phoneHref(phone: string) {
   const digits = phone.replace(/[^\d+]/g, "");

@@ -10,6 +10,9 @@ import {
 } from "@/actions/categoryActions";
 import type { AdminCategory, CategoryInput } from "@/types";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ImagePickerModal } from "./ImagePickerModal";
+import { SeoFieldsEditor, EMPTY_SEO_FIELDS, type SeoFieldsValue } from "./SeoFieldsEditor";
+import { generateSeoFields } from "@/lib/seoAutofill";
 
 const inp =
   "w-full rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] outline-none focus:border-[var(--color-accent)] focus:ring-2 focus:ring-[var(--color-accent)]/20 transition";
@@ -41,6 +44,22 @@ function CategoryForm({
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [seoFields, setSeoFields] = useState<SeoFieldsValue>(
+    initial
+      ? {
+          seoTitle: initial.seoTitle ?? "",
+          seoDescription: initial.seoDescription ?? "",
+          seoKeywords: initial.seoKeywords ?? "",
+          ogImage: initial.ogImage ?? "",
+        }
+      : EMPTY_SEO_FIELDS,
+  );
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const uploadedImages = image.trim() ? [image.trim()] : [];
+
+  function handlePickerConfirm(urls: string[]) {
+    setSeoFields((prev) => ({ ...prev, ogImage: urls[0] ?? prev.ogImage }));
+  }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -72,6 +91,10 @@ function CategoryForm({
       description: description.trim() || undefined,
       image: image.trim() || undefined,
       isActive,
+      seoTitle: seoFields.seoTitle.trim() || undefined,
+      seoDescription: seoFields.seoDescription.trim() || undefined,
+      seoKeywords: seoFields.seoKeywords.trim() || undefined,
+      ogImage: seoFields.ogImage.trim() || undefined,
     };
 
     start(async () => {
@@ -86,6 +109,7 @@ function CategoryForm({
   }
 
   return (
+    <>
     <form
       onSubmit={handleSubmit}
       className="rounded-2xl border border-[var(--color-accent)]/30 bg-[var(--color-accent)]/5 p-6 space-y-4"
@@ -162,6 +186,19 @@ function CategoryForm({
             <span className="text-sm font-medium text-[var(--color-text)]">Active — visible to store visitors</span>
           </label>
         </div>
+        <div className="sm:col-span-2">
+          <SeoFieldsEditor
+            value={seoFields}
+            onChange={setSeoFields}
+            onUploadImage={uploadToImgbb}
+            onSelectExisting={() => setPickerOpen(true)}
+            hasExistingImages={uploadedImages.length > 0}
+            onAutoFill={() => {
+              setSeoFields((prev) => ({ ...prev, ...generateSeoFields({ name, description }) }));
+            }}
+            entityLabel="category"
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -178,6 +215,17 @@ function CategoryForm({
         </button>
       </div>
     </form>
+
+    {pickerOpen && (
+      <ImagePickerModal
+        images={uploadedImages}
+        alreadySelected={seoFields.ogImage ? [seoFields.ogImage] : []}
+        mode="single"
+        onConfirm={handlePickerConfirm}
+        onClose={() => setPickerOpen(false)}
+      />
+    )}
+    </>
   );
 }
 
