@@ -31,14 +31,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const params = await searchParams;
   const [baseUrl, identity] = await Promise.all([getBaseUrl(), getSiteIdentity()]);
-  // Filtered views always canonicalize to plain /shop — they aren't separately indexed.
-  const url = `${baseUrl}/shop`;
   const defaultImage = identity.seo.ogImage ?? `${baseUrl}${DEFAULT_OG_IMAGE_PATH}`;
 
   let title = SHOP_DEFAULT_TITLE;
   let description = SHOP_DEFAULT_DESCRIPTION;
   let image = defaultImage;
   let keywords: string | undefined;
+  // A pure category filter (no search term) gets its own canonical URL and sitemap entry —
+  // matches app/sitemap.ts. Combined with a search term, or an unknown slug, it's a
+  // transient filtered view that canonicalizes back to plain /shop.
+  let url = `${baseUrl}/shop`;
 
   if (params.category) {
     const categoryResult = await getCategoryBySlug(params.category);
@@ -50,6 +52,7 @@ export async function generateMetadata({
         (category.description ? truncate(category.description, MAX_DESCRIPTION_LENGTH) : SHOP_DEFAULT_DESCRIPTION);
       image = category.ogImage?.trim() || category.image || defaultImage;
       keywords = category.seoKeywords?.trim() || undefined;
+      if (!params.search) url = `${baseUrl}/shop?category=${category.slug}`;
     }
   }
 
